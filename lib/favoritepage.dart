@@ -1,12 +1,12 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'favoritepage.dart';
+import 'homepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class FavoritePage extends StatelessWidget {
+  const FavoritePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,7 @@ class HomePage extends StatelessWidget {
                 Tab(icon: Icon(Icons.card_giftcard)),
               ],
             ),
-            title: const Text('Home Page'),
+            title: const Text('My Favorites'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.search),
@@ -37,27 +37,20 @@ class HomePage extends StatelessWidget {
           body: const TabBarView(
             children: [
               // HOME
-              Text('Home with random recommendations'),
+              Text('Home with random favorites'),
 
               // HOTEL
-              Text('Hotel recommendations'),
+              Text('Hotel favorites'),
 
               // FOOD
-              Text('Food recommendations'),
+              Text('Food favorites'),
 
               // MUSEUM
-              Text('Museum recommendations'),
+              Text('Museum favorites'),
 
               // GIFT
-              Text('Gift?? recommendations'),
+              Text('Gift?? favorites'),
             ],
-          ),
-
-          floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              // BUTTON FOR ADDING A NEW ELEMENT ON THE HOME PAGE
-            },
-            child: Icon(Icons.add),
           ),
 
           // BOTTOM NAVIGATION BAR
@@ -73,9 +66,7 @@ class HomePage extends StatelessWidget {
                 ),
                 IconButton(
                   icon: const Icon(Icons.favorite),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritePage()));
-                  },
+                  onPressed: () {},
                 ),
                 IconButton(
                   icon: const Icon(Icons.access_time),
