@@ -1,9 +1,17 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'style.dart';
 import 'homepage.dart';
+import 'loginpage.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -18,59 +26,28 @@ class MyApp extends StatelessWidget {
         primaryColor: AppColor.LightBlue,
         //primarySwatch: AppColor.LightPink,
       ),
-      home: const MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Travel Application',
-                style: TextStyle(fontSize: 30),
-              ),
-              SizedBox(height: 50.0),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              TextField(
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-                  },
-                  child: Text('Log In'),
-                ),
-              ),
-              SizedBox(height: 50.0),
-              Text("Don't have an account? Sign up"),
-            ],
-          ),
-        ),
+      home: StreamBuilder(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.active) {
+            // ConnectionState.active means that the stream has emitted at least one item
+            // and will continue to do so as the authentication state changes.
+            if (snapshot.hasData) {
+              print('has data');
+              return const HomePage();
+            } else {
+              print('no data');
+              return const LoginPage();
+            }
+          } else {
+            // ConnectionState.waiting means the stream is still waiting for data.
+            // You might want to display a loading indicator or handle this case differently.
+            return CircularProgressIndicator(); // Replace with your loading indicator widget
+          }
+        },
       ),
+
     );
   }
 }
+
