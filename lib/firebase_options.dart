@@ -21,6 +21,7 @@ class DefaultFirebaseOptions {
         'DefaultFirebaseOptions have not been configured for web - '
         'you can reconfigure this by running the FlutterFire CLI again.',
       );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -52,9 +53,20 @@ class DefaultFirebaseOptions {
     }
   }
 
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAsk2PerJvxXlDNZcpnB5x5WWKHVDAJ8PU',
+    appId: '1:758459920016:web:902f7fb0cae69075557215',
+    messagingSenderId: '758459920016',
+    projectId: 'traveldb-89cec',
+    authDomain: 'traveldb-89cec.firebaseapp.com',
+    storageBucket: 'traveldb-89cec.appspot.com',
+    measurementId: 'G-XXGL1KEVKH',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB2tMaHMT-aNHb5vT-sQ7rw9E3twHws0q0',
-    appId: '1:758459920016:android:bcc46f8bda8a088f557215',
+    appId: '1:758459920016:android:f25c25c6588bccd6557215',
     messagingSenderId: '758459920016',
     projectId: 'traveldb-89cec',
     storageBucket: 'traveldb-89cec.appspot.com',
