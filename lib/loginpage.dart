@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'registerpage.dart';
 import 'style.dart';
+import 'resetpasswordpage.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -11,7 +12,7 @@ class LoginPage extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage(
               'assets/bg_image/login_bg.jpg',
@@ -19,7 +20,7 @@ class LoginPage extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child: Center(
+        child: const Center(
           child: LoginForm(),
         ),
       ),
@@ -41,6 +42,34 @@ class _LoginFormState extends State<LoginForm> {
   String password = '';
   String error = '';
 
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter an email address.';
+    }
+
+    // Use a regular expression to check if the email is valid
+    final emailRegex = RegExp(r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email address.';
+    }
+
+    return null; // Return null if the email is valid
+  }
+
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password.';
+    }
+
+    // Check if the password meets your criteria (e.g., minimum length)
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    }
+
+    return null; // Return null if the password is valid
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -48,10 +77,10 @@ class _LoginFormState extends State<LoginForm> {
       child: Form(
         key: _formKey,
         child: Container(
-          margin: EdgeInsets.only(top: 100.0),
+          margin: const EdgeInsets.only(top: 100.0),
           child: ListView(
             children: [
-              Center(
+              const Center(
                 child: Text(
                   'Travel Guide App',
                   style: TextStyle(
@@ -61,7 +90,7 @@ class _LoginFormState extends State<LoginForm> {
                   ),
                 ),
               ),
-              SizedBox(height: 70.0),
+              const SizedBox(height: 70.0),
               TextFormField(
                 decoration: InputDecoration(
                   labelText: 'Email',
@@ -75,8 +104,9 @@ class _LoginFormState extends State<LoginForm> {
                   email = value;
                   print(email);
                 },
+                validator: validateEmail,
               ),
-              SizedBox(
+              const SizedBox(
                 height: 40,
               ),
               TextFormField(
@@ -92,31 +122,39 @@ class _LoginFormState extends State<LoginForm> {
                 onChanged: (value) {
                   password = value;
                 },
+                validator: validatePassword,
               ),
-              SizedBox(
-                height: 40,
+              const SizedBox(
+                height: 20,
+              ),
+              const SizedBox(
+                height: 20,
               ),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    try {
-                      final currentUser = await _authentication
-                          .signInWithEmailAndPassword(
-                          email: email, password: password);
-                      if (currentUser.user != null) {
-                        _formKey.currentState!.reset();
-                      }
-                    } catch (e) {
-                      setState(() {
-                        if (e is FirebaseAuthException) {
-                          //error = e.message!;
-                          error='Email or password are incorrect.';
-                        } else {
-                          error = 'An error occurred';
+                    if (_formKey.currentState!.validate()) {
+                      try {
+                        final currentUser = await _authentication
+                            .signInWithEmailAndPassword(
+                          email: email,
+                          password: password,
+                        );
+                        if (currentUser.user != null) {
+                          _formKey.currentState!.reset();
                         }
-                      });
+                      } catch (e) {
+                        setState(() {
+                          if (e is FirebaseAuthException) {
+                            //error = e.message!;
+                            error = 'Email or password are incorrect.';
+                          } else {
+                            error = 'An error occurred';
+                          }
+                        });
+                      }
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -141,32 +179,57 @@ class _LoginFormState extends State<LoginForm> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
                       error,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.red,
                         fontSize: 16,
                       ),
                     ),
                   ),
                 ),
-              SizedBox(height: 60,),
+              const SizedBox(
+                height: 60,
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?", style: TextStyle(fontWeight: FontWeight.bold,),),
+                  const Text(
+                    "Don't have an account?",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   TextButton(
-                    child: Text('Sign up',style: TextStyle(color:Colors.blueGrey, fontWeight: FontWeight.bold,),),
+                    child: const Text(
+                      'Sign up',
+                      style: TextStyle(
+                        color: Colors.blueGrey,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     onPressed: () {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => RegisterPage()));
+                              builder: (context) => const RegisterPage()));
                     },
                   )
                 ],
               ),
-              //Text('Forgot Password ?'),
-
-
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ResetPasswordPage()),
+                  );
+                },
+                child: const Text(
+                  'Forgot Password?',
+                  style: TextStyle(
+                    color: Colors.blueGrey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -174,3 +237,5 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 }
+
+
