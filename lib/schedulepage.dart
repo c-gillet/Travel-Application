@@ -5,6 +5,8 @@ import 'favoritepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class SchedulePage extends StatelessWidget {
   const SchedulePage({Key? key});
@@ -28,18 +30,19 @@ class ScheduleScaffold extends StatelessWidget {
       appBar: AppBar(
         title: Text('My Schedule'),
       ),
-      body: Column(
+      body: ListView(
         children: [
-          Center(
-            child: Container(
-              child: ScheduleTableCalendar(),
+          Container(
+            child: Center(
+              child: Container(
+                child: ScheduleTableCalendar(),
+              ),
             ),
           ),
           SizedBox(height: 20),
-          Expanded(
-            child: Container(
-              child: UpcomingEventsList(),
-            ),
+          Container(
+            height: MediaQuery.of(context).size.height * 0.5, // Ajusta la altura según sea necesario
+            child: UpcomingEventsList(),
           ),
         ],
       ),
@@ -76,6 +79,7 @@ class ScheduleScaffold extends StatelessWidget {
   }
 }
 
+
 class ScheduleTableCalendar extends StatefulWidget {
   @override
   _ScheduleTableCalendarState createState() => _ScheduleTableCalendarState();
@@ -97,7 +101,7 @@ class _ScheduleTableCalendarState extends State<ScheduleTableCalendar> {
           calendarFormat: CalendarFormat.month,
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-              color: Colors.lightBlue,
+              color: Colors.lightBlueAccent,
               shape: BoxShape.circle,
             ),
             selectedDecoration: BoxDecoration(
@@ -124,134 +128,136 @@ class _ScheduleTableCalendarState extends State<ScheduleTableCalendar> {
 }
 
 void _openAddDataDialog(BuildContext context, DateTime selectedDay) {
-  List<String> dropdownItems = ['Meeting', 'Appointment', 'Reminder', 'Other'];
-  String? selectedDropdownItem = dropdownItems.first;
-  String selectedValue = selectedDropdownItem ?? "Default Value";
+  List<String> dropdownItems = [];
   TimeOfDay selectedTime = TimeOfDay.now();
+  TextEditingController _notesController = TextEditingController();
 
-  TextEditingController _notesController = TextEditingController(); // Definir el controlador aquí
+  FirebaseFirestore.instance
+      .collection('recommendations')
+      .get()
+      .then((QuerySnapshot querySnapshot) {
+    querySnapshot.docs.forEach((doc) {
+      dropdownItems.add(doc['recoName'] ?? ''); // Agregar el nombre de la recomendación a la lista
+    });
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: SingleChildScrollView(
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              alignment: Alignment.topCenter,
-              child: Card(
-                elevation: 5,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField<String>(
-                        value: selectedDropdownItem,
-                        items: dropdownItems.map((String item) {
-                          return DropdownMenuItem<String>(
-                            value: item,
-                            child: Text(item),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            selectedDropdownItem = newValue;
-                          }
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Type',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      InkWell(
-                        onTap: () async {
-                          TimeOfDay? pickedTime = await showTimePicker(
-                            context: context,
-                            initialTime: selectedTime,
-                          );
-
-                          if (pickedTime != null) {
-                            selectedTime = pickedTime;
-                          }
-                        },
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: 'Start Time',
-                            hintText: 'Select Time',
-                            border: OutlineInputBorder(),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text(
-                                selectedTime.format(context),
-                              ),
-                              Icon(Icons.access_time),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      TextFormField(
-                        controller: _notesController, // Asignar el controlador al campo de texto
-                        decoration: InputDecoration(labelText: 'Notes'),
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {
-                          String notes = _notesController.text; // Obtener las notas ingresadas
-                          _saveDataToFirebase(selectedDay, selectedValue, selectedTime, notes, context);
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Save'),
-                      ),
-                    ],
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: dropdownItems.isNotEmpty ? dropdownItems.first : null,
+                    items: dropdownItems.map((String item) {
+                      return DropdownMenuItem<String>(
+                        value: item,
+                        child: Text(item),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      // Tu lógica onChanged aquí
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Type',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
+                  SizedBox(height: 20),
+                  InkWell(
+                    onTap: () async {
+                      TimeOfDay? pickedTime = await showTimePicker(
+                        context: context,
+                        initialTime: selectedTime,
+                      );
+
+                      if (pickedTime != null) {
+                        selectedTime = pickedTime;
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Start Time',
+                        hintText: 'Select Time',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Text(
+                            selectedTime.format(context),
+                          ),
+                          Icon(Icons.access_time),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  TextFormField(
+                    controller: _notesController,
+                    decoration: InputDecoration(labelText: 'Notes'),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      String notes = _notesController.text;
+                      _saveDataToFirebase(selectedDay, dropdownItems.first, selectedTime, notes, context);
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Save'),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      );
-    },
-  );
+        );
+      },
+    );
+  }).catchError((error) {
+    print('Error obteniendo recomendaciones: $error');
+  });
 }
 
 
 
-void _saveDataToFirebase(
+Future<void> _saveDataToFirebase(
     DateTime selectedDay,
     String eventType,
     TimeOfDay selectedTime,
     String notes,
     BuildContext context,
-    ) {
-  CollectionReference events = FirebaseFirestore.instance.collection('Calendar');
+    ) async {
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
-  events
-      .add({
-    'date': selectedDay,
-    'type': eventType,
-    'start_time': selectedTime.format(context),
-    'notes': notes,
-  })
-      .then((value) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Event added')),
-    );
-  })
-      .catchError((error) {
-    print(' ERROR : $error');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error adding event: $error')),
-    );
-  });
+  if (currentUser != null) {
+    CollectionReference events = FirebaseFirestore.instance.collection('Calendar');
+
+    events
+        .add({
+      'userId': currentUser.uid,
+      'date': selectedDay,
+      'type': eventType,
+      'start_time': selectedTime.format(context),
+      'notes': notes,
+    })
+        .then((value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Event added')),
+      );
+    })
+        .catchError((error) {
+      print(' ERROR : $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding event: $error')),
+      );
+    });
+  } else {
+    print('No user ');
+  }
 }
 
 class UpcomingEventsList extends StatelessWidget {
@@ -274,7 +280,7 @@ class UpcomingEventsList extends StatelessWidget {
               Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
 
               if (data == null) {
-                return SizedBox(); // O un Widget de manejo de datos nulos
+                return SizedBox();
               }
 
               DateTime eventDate = (data['date'] as Timestamp).toDate();
@@ -325,15 +331,24 @@ class UpcomingEventsList extends StatelessWidget {
 class ScheduleFunctions {
   static Future<QuerySnapshot> getUpcomingEvents() async {
     DateTime now = DateTime.now();
-    DateTime futureDate = DateTime(now.year, now.month, now.day + 7); // Obtener eventos de la próxima semana
+    DateTime futureDate = DateTime(now.year, now.month, now.day + 7);
 
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('Calendar')
-        .where('date', isGreaterThanOrEqualTo: now, isLessThanOrEqualTo: futureDate)
-        .orderBy('date')
-        .get();
+    String? currentUserUid = FirebaseAuth.instance.currentUser?.uid;
 
-    return snapshot;
+    if (currentUserUid != null) {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('Calendar')
+          .where('userId',
+          isEqualTo: currentUserUid)
+          .where(
+          'date', isGreaterThanOrEqualTo: now, isLessThanOrEqualTo: futureDate)
+          .orderBy('date')
+          .get();
+
+      return snapshot;
+    } else {
+      throw Exception('No user logged in');
+    }
   }
 
   static Future<void> deleteEvent(String eventId) async {
