@@ -35,7 +35,7 @@ class ScheduleScaffold extends StatelessWidget {
               child: ScheduleTableCalendar(),
             ),
           ),
-          SizedBox(height: 20), // Espacio entre el calendario y la lista de eventos
+          SizedBox(height: 20),
           Expanded(
             child: Container(
               child: UpcomingEventsList(),
@@ -101,7 +101,9 @@ class _ScheduleTableCalendarState extends State<ScheduleTableCalendar> {
               shape: BoxShape.circle,
             ),
             selectedDecoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
+              color: Theme
+                  .of(context)
+                  .primaryColor,
               shape: BoxShape.circle,
             ),
           ),
@@ -119,75 +121,137 @@ class _ScheduleTableCalendarState extends State<ScheduleTableCalendar> {
       ],
     );
   }
+}
 
-  void _openAddDataDialog(BuildContext context, DateTime selectedDay) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Add Event"),
-          content: SingleChildScrollView( // Utilizar SingleChildScrollView para que sea desplazable
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: InputDecoration(labelText: 'Title'),
+void _openAddDataDialog(BuildContext context, DateTime selectedDay) {
+  List<String> dropdownItems = ['Meeting', 'Appointment', 'Reminder', 'Other'];
+  String? selectedDropdownItem = dropdownItems.first;
+  String selectedValue = selectedDropdownItem ?? "Default Value";
+  TimeOfDay selectedTime = TimeOfDay.now();
+
+  TextEditingController _notesController = TextEditingController(); // Definir el controlador aquí
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.9,
+              alignment: Alignment.topCenter,
+              child: Card(
+                elevation: 5,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: selectedDropdownItem,
+                        items: dropdownItems.map((String item) {
+                          return DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(item),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            selectedDropdownItem = newValue;
+                          }
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Type',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      InkWell(
+                        onTap: () async {
+                          TimeOfDay? pickedTime = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                          );
+
+                          if (pickedTime != null) {
+                            selectedTime = pickedTime;
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            labelText: 'Start Time',
+                            hintText: 'Select Time',
+                            border: OutlineInputBorder(),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                selectedTime.format(context),
+                              ),
+                              Icon(Icons.access_time),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      TextFormField(
+                        controller: _notesController, // Asignar el controlador al campo de texto
+                        decoration: InputDecoration(labelText: 'Notes'),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          String notes = _notesController.text; // Obtener las notas ingresadas
+                          _saveDataToFirebase(selectedDay, selectedValue, selectedTime, notes, context);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Save'),
+                      ),
+                    ],
                   ),
-                  TextFormField(
-                    controller: _descriptionController,
-                    decoration: InputDecoration(labelText: 'Description'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _saveDataToFirebase(selectedDay);
-                Navigator.of(context).pop();
-              },
-              child: Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-
-  void _saveDataToFirebase(DateTime selectedDay) {
-    String title = _titleController.text;
-    String description = _descriptionController.text;
-
-    if (title.isNotEmpty && description.isNotEmpty) {
-      CollectionReference events = FirebaseFirestore.instance.collection('Calendar');
-
-      events.add({
-        'date': selectedDay,
-        'title': title,
-        'description': description,
-      }).then((value) {
-        _titleController.clear();
-        _descriptionController.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Event added')),
-        );
-      }).catchError((error) {
-        print(' ERROR : $error');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding event: $error')),
-        );
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill in all fields')),
+        ],
       );
-    }
-  }
+    },
+  );
+}
+
+
+
+void _saveDataToFirebase(
+    DateTime selectedDay,
+    String eventType,
+    TimeOfDay selectedTime,
+    String notes,
+    BuildContext context,
+    ) {
+  CollectionReference events = FirebaseFirestore.instance.collection('Calendar');
+
+  events
+      .add({
+    'date': selectedDay,
+    'type': eventType,
+    'start_time': selectedTime.format(context),
+    'notes': notes,
+  })
+      .then((value) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Event added')),
+    );
+  })
+      .catchError((error) {
+    print(' ERROR : $error');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error adding event: $error')),
+    );
+  });
 }
 
 class UpcomingEventsList extends StatelessWidget {
@@ -203,41 +267,53 @@ class UpcomingEventsList extends StatelessWidget {
         } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Text('There are no upcoming events'));
         } else {
-          return Expanded(
-            child: ListView(
-              children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-                DateTime eventDate = (data['date'] as Timestamp).toDate();
-                String title = data['title'];
-                String description = data['description'];
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              DocumentSnapshot document = snapshot.data!.docs[index];
+              Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
 
-                return Dismissible(
-                  key: UniqueKey(),
-                  onDismissed: (direction) {
-                    ScheduleFunctions.deleteEvent(document.id);
+              if (data == null) {
+                return SizedBox(); // O un Widget de manejo de datos nulos
+              }
+
+              DateTime eventDate = (data['date'] as Timestamp).toDate();
+              String title = data['type'] ?? 'Title not available';
+              String description = data['notes'] ?? 'Description not available';
+
+              return Dismissible(
+                key: UniqueKey(),
+                onDismissed: (direction) {
+                  ScheduleFunctions.deleteEvent(document.id).then((value) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('$title deleted'),
                       ),
                     );
-                  },
-                  background: Container(
-                    color: Colors.red,
-                    child: Icon(Icons.delete, color: Colors.white),
-                    alignment: Alignment.centerRight,
-                    padding: EdgeInsets.only(right: 20.0),
+                  }).catchError((error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error deleting $title: $error'),
+                      ),
+                    );
+                  });
+                },
+                background: Container(
+                  color: Colors.red,
+                  child: Icon(Icons.delete, color: Colors.white),
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 20.0),
+                ),
+                direction: DismissDirection.endToStart,
+                child: ListTile(
+                  title: Text(title),
+                  subtitle: Text(description),
+                  trailing: Text(
+                    '${eventDate.day}/${eventDate.month}/${eventDate.year}',
                   ),
-                  direction: DismissDirection.endToStart,
-                  child: ListTile(
-                    title: Text(title),
-                    subtitle: Text(description),
-                    trailing: Text(
-                      '${eventDate.day}/${eventDate.month}/${eventDate.year}',
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            },
           );
         }
       },
@@ -263,7 +339,7 @@ class ScheduleFunctions {
   static Future<void> deleteEvent(String eventId) async {
     try {
       await FirebaseFirestore.instance.collection('Calendar').doc(eventId).delete();
-      print('Successfully deleted evento');
+      print('Successfully deleted event');
     } catch (e) {
       print('Error deleting event: $e');
       }
