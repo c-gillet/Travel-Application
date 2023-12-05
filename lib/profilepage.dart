@@ -1,84 +1,248 @@
 import 'package:flutter/material.dart';
-import 'homepage.dart';
-import 'favoritepage.dart';
-import 'schedulepage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:travel_application/style.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
-class ProfilePage extends StatelessWidget {
+
+import 'LoginPage.dart';
+
+
+class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final _authentification = FirebaseAuth.instance;
+  User? loggedUser;
+  String? username;
+
+  @override
+  void initState() {
+    super.initState();
+    getCurrentUser();
+  }
+
+  void getCurrentUser() async {
+    try {
+      final user = _authentification.currentUser;
+      if (user != null) {
+        loggedUser = user;
+
+        final currentUserInfo =
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+        if (currentUserInfo.exists) {
+          setState(() {
+            username = currentUserInfo.data()!['userName'];
+          });
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  File? pickedImage;
+
+  Future<void> _pickProfileImage() async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        print("Picked Image Path: ${pickedFile.path}");
+        setState(() {
+          pickedImage = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: DefaultTabController(
-        length: 5,
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('My Profile'),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: NetworkImage('https://example.com/profile_image.jpg'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('My Profile'),
+        backgroundColor: AppColor.LightPink,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              try {
+                await FirebaseAuth.instance.signOut();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => LoginPage()),
+                );
+              } catch (e) {
+                print("Error during sign-out: $e");
+              }
+            },
+            icon: Icon(Icons.logout),
+          )
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 100, // Adjust the size as needed
+                      height: 100, // Adjust the size as needed
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColor.LightPink,
+                        image: pickedImage != null
+                            ? DecorationImage(
+                          image: FileImage(pickedImage!),
+                          fit: BoxFit.cover,
+                        )
+                            : null,
+                      ),
+                      child: pickedImage == null
+                          ? Icon(
+                        Icons.image,
+                        color: Colors.white,
+                        size: 40,
+                      )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: InkWell(
+                        onTap: _pickProfileImage,
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey[200],
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            color: AppColor.LightPink,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20,),
+                Text(
+                  username != null ? 'Hi $username!' : 'Hi user!',
+                  style: TextStyle(
+                    fontSize: 20,
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Username',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10,),
+                Text(
+                  'Email: ${loggedUser!.email!}',
+                  style: TextStyle(
+                    fontSize: 15,
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Email: test@example.com',
-                    style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 40,),
+                Container(
+                  height: 60, // Adjust the height as needed
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: AppColor.LightPink, width: 1),
+                    ),
+                    child: ListTile(
+                      title: const Text('Places Already Visited'),
+                      leading: const Icon(Icons.favorite),
+                      trailing: const Icon(Icons.navigate_next),
+                      onTap: () {},
+                    ),
                   ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Ajoutez ici le code pour se déconnecter ou effectuer d'autres actions liées au profil
-                    },
-                    child: Text('Log out'),
+                ),
+                const SizedBox(height: 5,),
+                Container(
+                  height: 60, // Adjust the height as needed
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: AppColor.LightPink, width: 1),
+                    ),
+                    child: DropdownButtonFormField(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10.0), // Adjust border color as needed
+                        ),
+                        labelText: '   Choose Currency',
+                        labelStyle: const TextStyle(color: Colors.black),
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Icon(Icons.attach_money),
+                        ), // Adjust icon and color as needed
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'WON', child: Text('Korean Won')),
+                        DropdownMenuItem(value: 'USD', child: Text('US Dollar')),
+                        DropdownMenuItem(value: 'EUR', child: Text('Euro')),
+                        DropdownMenuItem(value: 'GBP', child: Text('British Pound')),
+                        DropdownMenuItem(value: 'JPY', child: Text('Japanese Yen')),
+                        // Add more currency options as needed
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          // Handle onChanged event
+                          print('Selected Currency: $value');
+                        });
+
+                      },
+                    ),
                   ),
-                ],
-              ),
-            ),
+                ),
+                const SizedBox(height: 5,),
+                Container(
+                  height: 60,
+                  width: double.infinity,// Adjust the height as needed
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: const BorderSide(color: AppColor.LightPink, width: 1),
+                    ),
+                    child: ElevatedButton(
+                      child: const Text('Log Out', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all<Color>(AppColor.LightPink),
+                      ),
+                      onPressed: () async{
+                        try {
+                          await FirebaseAuth.instance.signOut();
+                          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const LoginPage()));
+                        } catch (e) {
+                          print("Error during sign-out: $e");
+                        }
+                      },
+
+
+                    )
+                  ),
+                ),
+
+
+
+              ]
           ),
 
-          // BOTTOM NAVIGATION BAR
-          bottomNavigationBar: BottomAppBar(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.favorite),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.access_time),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SchedulePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_circle),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
+
         ),
+
       ),
     );
   }
 }
+
+
