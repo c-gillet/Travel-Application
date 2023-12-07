@@ -195,6 +195,7 @@ class _RegisterFormState extends State<RegisterForm> {
                           await FirebaseFirestore.instance.collection('users').doc(newUser.user!.uid).set({
                             'userName': username,
                             'email': email,
+                            'profilePictureUrl': '',
                           });
 
                           if (newUser.user != null) {

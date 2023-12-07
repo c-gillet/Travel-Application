@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'favoritepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
+import 'commentpage.dart';
 import 'style.dart';
 
 class HomePage extends StatelessWidget {
@@ -59,6 +60,7 @@ class HomePage extends StatelessWidget {
             },
             child: Icon(Icons.add),
           ),
+
 
           // BOTTOM NAVIGATION BAR
           bottomNavigationBar: BottomAppBar(
