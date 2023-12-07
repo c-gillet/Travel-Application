@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'bottombar.dart';
 import 'homepage.dart';
 import 'favoritepage.dart';
 import 'profilepage.dart';
@@ -19,13 +20,20 @@ class SchedulePage extends StatelessWidget {
   }
 }
 
-class ScheduleScaffold extends StatelessWidget {
+class ScheduleScaffold extends StatefulWidget {
   const ScheduleScaffold({Key? key}) : super(key: key);
 
+  @override
+  State<ScheduleScaffold> createState() => _ScheduleScaffoldState();
+}
+
+class _ScheduleScaffoldState extends State<ScheduleScaffold> {
+  int _currentIndex = 2;
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
 
+    int _currentIndex = 2;
     return Scaffold(
       appBar: AppBar(
         title: Text('My Schedule'),
@@ -46,34 +54,13 @@ class ScheduleScaffold extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.favorite),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritePage()));
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.access_time),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: const Icon(Icons.account_circle),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-              },
-            ),
-          ],
-        ),
+      bottomNavigationBar: CommonBottomBar(
+        currentIndex: _currentIndex,
+        onTabTapped: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }

@@ -23,6 +23,7 @@ class _CommentsState extends State<Comments> {
   User? loggedUser;
   String? username;
   String? profileUrl;
+
   //String? recoID="hTgNNEOJ3xAtFcpjypRD";//Testing
 
   @override
@@ -60,14 +61,14 @@ class _CommentsState extends State<Comments> {
 
     try {
       QuerySnapshot<Map<String, dynamic>> querySnapshot =
-          await FirebaseFirestore.instance
-              .collection('comments')
-              .where('recoID', isEqualTo: widget.recoID)
-              .orderBy('experienceDate', descending: true)
-              .get();
+      await FirebaseFirestore.instance
+          .collection('comments')
+          .where('recoID', isEqualTo: widget.recoID)
+          .orderBy('experienceDate', descending: true)
+          .get();
 
       for (QueryDocumentSnapshot<Map<String, dynamic>> doc
-          in querySnapshot.docs) {
+      in querySnapshot.docs) {
         Map<String, dynamic> commentData = doc.data()!;
         filedata.add(commentData);
       }
@@ -80,10 +81,12 @@ class _CommentsState extends State<Comments> {
 
   Future<Map<String, dynamic>> fetchUserData(String userName) async {
     try {
-      QuerySnapshot<Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
+      QuerySnapshot<
+          Map<String, dynamic>> querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('userName', isEqualTo: userName)
-          .limit(1) // Limit the result to one document, assuming 'userName' is unique
+          .limit(
+          1) // Limit the result to one document, assuming 'userName' is unique
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
@@ -120,7 +123,8 @@ class _CommentsState extends State<Comments> {
                     child: FutureBuilder(
                       future: fetchUserData(data[i]['username']),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return CircularProgressIndicator();
                         } else if (snapshot.hasError) {
                           return Text('Error loading profile picture');
@@ -227,8 +231,6 @@ class _CommentsState extends State<Comments> {
   }
 
 
-
-
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -240,7 +242,6 @@ class _CommentsState extends State<Comments> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  //Text('data'),
                   Icon(Icons.keyboard_control_rounded),
                 ],
               ),
@@ -267,8 +268,8 @@ class _CommentsState extends State<Comments> {
               List<Map<String, dynamic>> comments = snapshot.data ?? [];
               return Container(
                 child: CommentBox(
-
-                  userImage: AssetImage(profileUrl ?? 'assets/profile_avatar/default_profile_image.png'),
+                  userImage: AssetImage(profileUrl ??
+                      'assets/profile_avatar/default_profile_image.png'),
                   labelText: 'Write a comment...',
                   errorText: 'Comment cannot be blank',
                   withBorder: false,
@@ -280,7 +281,8 @@ class _CommentsState extends State<Comments> {
                       DateTime now = DateTime.now();
 
                       // Format the date and time as a string
-                      String formattedDate = DateFormat('yyyy-MM-dd HH:mm').format(now);
+                      String formattedDate = DateFormat('yyyy-MM-dd HH:mm')
+                          .format(now);
 
                       var newComment = {
                         'recoID': widget.recoID, //Insert the Id of the place
@@ -290,7 +292,8 @@ class _CommentsState extends State<Comments> {
                       };
 
                       // Add the comment to Firestore and get the DocumentReference
-                      DocumentReference docRef = await FirebaseFirestore.instance
+                      DocumentReference docRef = await FirebaseFirestore
+                          .instance
                           .collection('comments')
                           .add(newComment);
 
@@ -317,9 +320,13 @@ class _CommentsState extends State<Comments> {
                   commentController: commentController,
                   backgroundColor: AppColor.LightBlue,
                   textColor: Colors.white,
-                  sendWidget:
-                      const Icon(Icons.send_sharp, size: 30, color: Colors.white),
-                  child: commentChild(comments),
+                  sendWidget: const Icon(
+                      Icons.send_sharp, size: 30, color: Colors.white),
+                  child: comments.isNotEmpty
+                      ? commentChild(comments)
+                      : Center(
+                    child: Text('No comments'),
+                  ),
                 ),
               );
             }

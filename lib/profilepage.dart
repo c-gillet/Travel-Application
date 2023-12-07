@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:file_picker/file_picker.dart';
 
 import 'LoginPage.dart';
+import 'bottombar.dart';
 import 'commentpage.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? username;
   String? profilePictureUrl;
   String? selectedAvatarUrl;
+  int _currentIndex = 3;
 
   @override
   void initState() {
@@ -148,6 +150,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text('My Profile'),
@@ -229,7 +232,6 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 5),
               Container(
                 height: 60, // Adjust the height as needed
                 child: Card(
@@ -328,6 +330,14 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: CommonBottomBar(
+        currentIndex: _currentIndex,
+        onTabTapped: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }
