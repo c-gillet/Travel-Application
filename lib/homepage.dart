@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'favoritepage.dart';
@@ -7,6 +8,7 @@ import 'style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -357,32 +359,51 @@ class _NewRecommendation extends State<NewRecommendation> {
   }
 
   void addRecommendation() async {
-    final recoID =
-        FirebaseFirestore.instance.collection('recommendations').doc().id;
+    try {
+      if (pickedImage == null) {
+        setState(() {
+          showErrorMessage = true;
+        });
+        return;
+      }
 
-    await FirebaseFirestore.instance
-        .collection('recommendations')
-        .doc(recoID)
-        .set({
-      'recoID': recoID,
-      'recoName': titleController.text,
-      'recoDescription': descriptionController.text,
-      'city': selectedCity,
-      'address': addressController.text,
-      'type': selectedType,
-      'username': username,
-      'recoRating': selectedRating,
-      'picture': pickedImage!.path,
-    });
+      final storageRef = firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child('recommendation_images/${DateTime.now().millisecondsSinceEpoch}');
 
-    titleController.clear();
-    descriptionController.clear();
-    selectedType = null;
-    selectedCity = null;
-    selectedRating = null;
-    addressController.clear();
-    pickedImage = null;
-    Navigator.pop(context);
+      await storageRef.putFile(File(pickedImage!.path));
+
+      final imageUrl = await storageRef.getDownloadURL();
+
+      final recoID =
+          FirebaseFirestore.instance.collection('recommendations').doc().id;
+
+      await FirebaseFirestore.instance
+          .collection('recommendations')
+          .doc(recoID)
+          .set({
+        'recoID': recoID,
+        'recoName': titleController.text,
+        'recoDescription': descriptionController.text,
+        'city': selectedCity,
+        'address': addressController.text,
+        'type': selectedType,
+        'username': username,
+        'recoRating': selectedRating,
+        'picture': imageUrl,
+      });
+
+      titleController.clear();
+      descriptionController.clear();
+      selectedType = null;
+      selectedCity = null;
+      selectedRating = null;
+      addressController.clear();
+      pickedImage = null;
+      Navigator.pop(context);
+    } catch (error) {
+      print('Error adding recommendation: $error');
+    }
   }
 
   void getCurrentUser() async {
