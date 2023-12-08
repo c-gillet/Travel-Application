@@ -4,9 +4,147 @@ import 'favoritepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key});
+
+  List<Widget> generateImageWidgets(BuildContext context, List<DocumentSnapshot> docs, String type) {
+    final double paddingValue = 30.0;
+
+    return List.generate(docs.length, (index) {
+      if (docs[index]['type'] == type || type == '') {
+        return Padding(
+          padding: EdgeInsets.all(paddingValue),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        content: SingleChildScrollView(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Material(
+                                      shape: const CircleBorder(),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close, size: 20.0),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 400,
+                                ),
+                                width: double.maxFinite,
+                                child: Image.asset(
+                                  'assets/background.jpg',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(docs[index]['recoName'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.star_border),
+                                      Text(docs[index]['recoRating']),
+                                    ],
+                                  ),
+                                  Text("3 comments")
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                alignment: Alignment.topLeft, // Align the text to the start
+                                child: Text(
+                                    "add by " + docs[index]['recoID'],
+                                    textAlign: TextAlign.start
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                alignment: Alignment.topLeft, // Align the text to the start
+                                child: Text(
+                                    "Description",
+                                    style: TextStyle(fontWeight: FontWeight.bold)
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                alignment: Alignment.topLeft, // Align the text to the start
+                                child: Text(
+                                  docs[index]['recoDescription'],
+                                  textAlign: TextAlign.justify,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                child: Container(
+                  color: const Color(0xFF99C7C1),
+                  width: MediaQuery.of(context).size.width - 2 * paddingValue,
+                  height: MediaQuery.of(context).size.width - 2 * paddingValue,
+                  child: Container(
+                    margin: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                      'assets/background.jpg',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(docs[index]['recoName']),
+                  Row(
+                    children: [
+                      Icon(Icons.star_border),
+                      Text(docs[index]['recoRating']),
+                    ],
+                  )
+                ],
+              ),
+            ],
+          ),
+        );
+      } else {
+        // You can return null or an empty container for non-"visit" items
+        return Container();
+      }
+    });
+
+
+  }
 
 
   @override
@@ -184,25 +322,129 @@ class HomePage extends StatelessWidget {
                       child: TabBarView(
                         children: [
                           // HOME
-                          //Text('Home with random recommendations'),
                           SingleChildScrollView(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: listWidgetImages,
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, ''),
+                                  );
+                                }
+                              },
                             ),
                           ),
 
                           // HOTEL
-                          const Text('Hotel recommendations'),
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Hotel'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
 
                           // FOOD
-                          const Text('Food recommendations'),
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Restaurant'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
 
                           // MUSEUM
-                          const Text('Museum recommendations'),
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Monument / Museum'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
 
                           // GIFT
-                          const Text('Gift?? recommendations'),
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Other'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
