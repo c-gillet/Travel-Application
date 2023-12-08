@@ -5,6 +5,7 @@ import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -111,6 +112,9 @@ class NewRecommendation extends StatefulWidget {
 }
 
 class _NewRecommendation extends State<NewRecommendation> {
+  final _authentification = FirebaseAuth.instance;
+  User? loggedUser;
+  String? username;
   late TextEditingController titleController;
   late TextEditingController descriptionController;
   String? selectedType;
@@ -121,6 +125,7 @@ class _NewRecommendation extends State<NewRecommendation> {
   @override
   void initState() {
     super.initState();
+    getCurrentUser();
     titleController = TextEditingController();
     descriptionController = TextEditingController();
     selectedType = null;
@@ -146,131 +151,133 @@ class _NewRecommendation extends State<NewRecommendation> {
       'Jejudo'
     ];
 
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.0),
-      ),
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        width: MediaQuery.of(context).size.width * 0.8,
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Add new recommendation',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      child: Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          width: MediaQuery.of(context).size.width * 0.8,
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Add new recommendation',
+                style: TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 16.0),
-            Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: titleController,
-                    decoration: InputDecoration(labelText: 'Title'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a title';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 8.0),
-                  Container(
-                    width: double.infinity,
-                    child: DropdownButtonFormField<String>(
-                      hint: Text('Recommendation type'),
-                      value: selectedType,
-                      elevation: 16,
-                      style: TextStyle(color: Colors.deepPurple, fontSize: 16),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedType = newValue;
-                        });
-                      },
+              SizedBox(height: 16.0),
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: titleController,
+                      decoration: InputDecoration(labelText: 'Title'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select a recommendation type';
+                          return 'Please enter a title';
                         }
                         return null;
                       },
-                      items: ['Hotel', 'Restaurant', 'Monument / Museum', 'Other']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
                     ),
-                  ),
-                  SizedBox(height: 8.0),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: InputDecoration(labelText: 'Description'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a description';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 8.0),
-                  Container(
-                    width: double.infinity,
-                    child: DropdownButtonFormField<String>(
-                      hint: Text('Select city'),
-                      value: selectedCity,
-                      elevation: 16,
-                      style: TextStyle(color: Colors.deepPurple, fontSize: 16),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedCity = newValue;
-                        });
-                      },
+                    SizedBox(height: 8.0),
+                    Container(
+                      width: double.infinity,
+                      child: DropdownButtonFormField<String>(
+                        hint: Text('Recommendation type'),
+                        value: selectedType,
+                        elevation: 16,
+                        style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedType = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a recommendation type';
+                          }
+                          return null;
+                        },
+                        items: ['Hotel', 'Restaurant', 'Monument / Museum', 'Other']
+                            .map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    TextFormField(
+                      controller: descriptionController,
+                      decoration: InputDecoration(labelText: 'Description'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select a city';
+                          return 'Please enter a description';
                         }
                         return null;
                       },
-                      items: cities.map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
                     ),
-                  ),
-                  TextFormField(
-                    controller: addressController,
-                    decoration: InputDecoration(labelText: 'Address'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an address';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
+                    SizedBox(height: 8.0),
+                    Container(
+                      width: double.infinity,
+                      child: DropdownButtonFormField<String>(
+                        hint: Text('Select city'),
+                        value: selectedCity,
+                        elevation: 16,
+                        style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCity = newValue;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a city';
+                          }
+                          return null;
+                        },
+                        items: cities.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    TextFormField(
+                      controller: addressController,
+                      decoration: InputDecoration(labelText: 'Address'),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter an address';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate() &&
-                    selectedType != null &&
-                    selectedCity != null) {
-                  addRecommendation();
-                }
-              },
-              child: Text('Add'),
-            ),
-          ],
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate() &&
+                      selectedType != null &&
+                      selectedCity != null) {
+                    addRecommendation();
+                  }
+                },
+                child: Text('Add'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -290,6 +297,7 @@ class _NewRecommendation extends State<NewRecommendation> {
       'city': selectedCity,
       'address': addressController.text,
       'type': selectedType,
+      'username': username,
     });
 
     titleController.clear();
@@ -298,5 +306,25 @@ class _NewRecommendation extends State<NewRecommendation> {
     selectedCity = null;
     addressController.clear();
     Navigator.pop(context);
+  }
+
+  void getCurrentUser() async {
+    try {
+      final user = _authentification.currentUser;
+      if (user != null) {
+        loggedUser = user;
+
+        final currentUserInfo =
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+        if (currentUserInfo.exists) {
+          setState(() {
+            username = currentUserInfo.data()!['userName'];
+          });
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 }
