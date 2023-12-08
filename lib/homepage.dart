@@ -52,7 +52,7 @@ class HomePage extends StatelessWidget {
                                 ),
                                 width: double.maxFinite,
                                 child: Image.asset(
-                                  'assets/background.jpg',
+                                  'assets/bg_image/login_bg.jpg',
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -119,7 +119,7 @@ class HomePage extends StatelessWidget {
                   child: Container(
                     margin: const EdgeInsets.all(8.0),
                     child: Image.asset(
-                      'assets/background.jpg',
+                      'assets/bg_image/login_bg.jpg',
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -185,7 +185,7 @@ class HomePage extends StatelessWidget {
                   BlendMode.srcATop,
                 ),
                 child: Image.asset(
-                  'assets/background.jpg',
+                  'assets/bg_image/login_bg.jpg',
                   fit: BoxFit.cover,
                 ),
               ),
