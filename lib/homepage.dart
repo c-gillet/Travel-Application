@@ -115,6 +115,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
+
 class NewRecommendation extends StatefulWidget {
   @override
   _NewRecommendation createState() => _NewRecommendation();
@@ -128,6 +129,7 @@ class _NewRecommendation extends State<NewRecommendation> {
   late TextEditingController descriptionController;
   String? selectedType;
   String? selectedCity;
+  String? selectedRating;
   late TextEditingController addressController;
   late XFile? pickedImage = null;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -142,6 +144,7 @@ class _NewRecommendation extends State<NewRecommendation> {
     selectedType = null;
     selectedCity = null;
     addressController = TextEditingController();
+    selectedRating = null;
   }
 
   @override
@@ -182,7 +185,6 @@ class _NewRecommendation extends State<NewRecommendation> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 16.0),
                 Form(
                   key: _formKey,
                   child: Column(
@@ -198,7 +200,6 @@ class _NewRecommendation extends State<NewRecommendation> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 8.0),
                       Container(
                         width: double.infinity,
                         child: DropdownButtonFormField<String>(
@@ -230,7 +231,6 @@ class _NewRecommendation extends State<NewRecommendation> {
                           }).toList(),
                         ),
                       ),
-                      SizedBox(height: 8.0),
                       TextFormField(
                         controller: descriptionController,
                         decoration: InputDecoration(labelText: 'Description'),
@@ -241,7 +241,32 @@ class _NewRecommendation extends State<NewRecommendation> {
                           return null;
                         },
                       ),
-                      SizedBox(height: 8.0),
+                      Container(
+                        width: double.infinity,
+                        child: DropdownButtonFormField<String>(
+                          hint: Text('Rating'),
+                          value: selectedRating,
+                          elevation: 16,
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedRating = newValue;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please rate your recommendation';
+                            }
+                            return null;
+                          },
+                          items: ['1', '2', '3', '4', '5'].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                       Container(
                         width: double.infinity,
                         child: DropdownButtonFormField<String>(
@@ -282,7 +307,6 @@ class _NewRecommendation extends State<NewRecommendation> {
                     ],
                   ),
                 ),
-                SizedBox(height: 8.0),
                 TextButton.icon(
                   onPressed: () async {
                     XFile? image = await ImagePicker()
@@ -296,12 +320,17 @@ class _NewRecommendation extends State<NewRecommendation> {
                   icon: Icon(Icons.add_a_photo),
                   label: Text('Add picture'),
                 ),
-                if (showErrorMessage)
+                if (showErrorMessage && pickedImage == null)
                   Text(
                     'Please add a picture',
                     style: TextStyle(color: Colors.red, fontSize: 13),
                   ),
-                SizedBox(height: 16.0),
+                if (pickedImage != null)
+                  Text(
+                    'Image successfully loaded!',
+                    style: TextStyle(color: Colors.green, fontSize: 13),
+                  ),
+                SizedBox(height: 8,),
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
@@ -309,6 +338,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                           _formKey.currentState?.validate() == false ||
                               selectedType == null ||
                               selectedCity == null ||
+                              selectedRating == null ||
                               pickedImage == null;
                     });
 
@@ -341,6 +371,7 @@ class _NewRecommendation extends State<NewRecommendation> {
       'address': addressController.text,
       'type': selectedType,
       'username': username,
+      'recoRating': selectedRating,
       'picture': pickedImage!.path,
     });
 
@@ -348,6 +379,7 @@ class _NewRecommendation extends State<NewRecommendation> {
     descriptionController.clear();
     selectedType = null;
     selectedCity = null;
+    selectedRating = null;
     addressController.clear();
     pickedImage = null;
     Navigator.pop(context);
