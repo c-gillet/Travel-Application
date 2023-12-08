@@ -1,16 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'bottombar.dart';
+import 'commentpage.dart';
 import 'favoritepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   List<Widget> generateImageWidgets(BuildContext context, List<DocumentSnapshot> docs, String type) {
     final double paddingValue = 30.0;
+
 
     return List.generate(docs.length, (index) {
       if (docs[index]['type'] == type || type == '') {
@@ -25,6 +33,7 @@ class HomePage extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
+                        contentPadding: EdgeInsets.only(bottom: 16.0),
                         content: SingleChildScrollView(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -57,52 +66,74 @@ class HomePage extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text(docs[index]['recoName'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(Icons.star_border),
-                                      Text(docs[index]['recoRating']),
-                                    ],
-                                  ),
-                                  Text("3 comments")
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Container(
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Text(docs[index]['recoName'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.star_border),
+                                            Text(docs[index]['recoRating']),
+                                          ],
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              backgroundColor: Colors.transparent,
+                                              builder: (context) => FractionallySizedBox(
+                                                heightFactor: 2 / 3,
+                                                child: Comments(
+                                                  recoID: docs[index]['recoID'],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Text("Show Comments"),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                            alignment: Alignment.topLeft, // Align the text to the start
+                                            child: Text(
+                                                "added by " + docs[index]['recoID'],
+                                                textAlign: TextAlign.start
+                                            )
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Container(
                                       alignment: Alignment.topLeft, // Align the text to the start
                                       child: Text(
-                                          "add by " + docs[index]['recoID'],
-                                          textAlign: TextAlign.start
-                                      )
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Container(
-                                alignment: Alignment.topLeft, // Align the text to the start
-                                child: Text(
-                                  docs[index]['recoDescription'],
-                                  textAlign: TextAlign.justify,
-                                  // Remove the overflow and maxLines properties to show full text if it's long
+                                        docs[index]['recoDescription'],
+                                        textAlign: TextAlign.justify,
+                                        // Remove the overflow and maxLines properties to show full text if it's long
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -150,12 +181,12 @@ class HomePage extends StatelessWidget {
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     final double paddingValue = 30.0;
     int length = 1;
+    int _currentIndex = 0;
+
 
 
     return MaterialApp(
@@ -370,37 +401,13 @@ class HomePage extends StatelessWidget {
             },
             child: Icon(Icons.add),
           ),
-          bottomNavigationBar: BottomAppBar(
-            color: const Color(0xFFFCC7BF),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.search, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const HomePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.favorite, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const FavoritePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.access_time, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const SchedulePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_circle, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
-                  },
-                ),
-              ],
-            ),
+          bottomNavigationBar: CommonBottomBar(
+            currentIndex: _currentIndex,
+            onTabTapped: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
           ),
         ),
       ),

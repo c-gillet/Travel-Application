@@ -1,13 +1,20 @@
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'bottombar.dart';
 import 'homepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
 
-class FavoritePage extends StatelessWidget {
+class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
 
+  @override
+  State<FavoritePage> createState() => _FavoritePageState();
+}
+
+class _FavoritePageState extends State<FavoritePage> {
+  int _currentIndex = 1;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -54,34 +61,13 @@ class FavoritePage extends StatelessWidget {
           ),
 
           // BOTTOM NAVIGATION BAR
-          bottomNavigationBar: BottomAppBar(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.favorite),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: const Icon(Icons.access_time),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SchedulePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_circle),
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-                  },
-                ),
-              ],
-            ),
+          bottomNavigationBar: CommonBottomBar(
+            currentIndex: _currentIndex,
+            onTabTapped: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
           ),
         ),
       ),
