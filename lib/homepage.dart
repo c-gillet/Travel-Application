@@ -6,6 +6,7 @@ import 'profilepage.dart';
 import 'style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -76,25 +77,33 @@ class HomePage extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => HomePage()));
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.favorite),
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritePage()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => FavoritePage()));
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.access_time),
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => SchedulePage()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => SchedulePage()));
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.account_circle),
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => ProfilePage()));
                   },
                 ),
               ],
@@ -120,7 +129,9 @@ class _NewRecommendation extends State<NewRecommendation> {
   String? selectedType;
   String? selectedCity;
   late TextEditingController addressController;
+  late XFile? pickedImage = null;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool showErrorMessage = false;
 
   @override
   void initState() {
@@ -151,133 +162,165 @@ class _NewRecommendation extends State<NewRecommendation> {
       'Jejudo'
     ];
 
-    return SingleChildScrollView(
-      child: Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-        ),
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.0),
+      ),
+      child: SingleChildScrollView(
         child: Container(
           height: MediaQuery.of(context).size.height * 0.8,
           width: MediaQuery.of(context).size.width * 0.8,
           padding: EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Add new recommendation',
-                style: TextStyle(
-                  fontSize: 18.0,
-                  fontWeight: FontWeight.bold,
+          child: ListView(children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Add new recommendation',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.0),
-              Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: titleController,
-                      decoration: InputDecoration(labelText: 'Title'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a title';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 8.0),
-                    Container(
-                      width: double.infinity,
-                      child: DropdownButtonFormField<String>(
-                        hint: Text('Recommendation type'),
-                        value: selectedType,
-                        elevation: 16,
-                        style: TextStyle(color: Colors.deepPurple, fontSize: 16),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedType = newValue;
-                          });
-                        },
+                SizedBox(height: 16.0),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: titleController,
+                        decoration: InputDecoration(labelText: 'Title'),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please select a recommendation type';
+                            return 'Please enter a title';
                           }
                           return null;
                         },
-                        items: ['Hotel', 'Restaurant', 'Monument / Museum', 'Other']
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
                       ),
-                    ),
-                    SizedBox(height: 8.0),
-                    TextFormField(
-                      controller: descriptionController,
-                      decoration: InputDecoration(labelText: 'Description'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a description';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: 8.0),
-                    Container(
-                      width: double.infinity,
-                      child: DropdownButtonFormField<String>(
-                        hint: Text('Select city'),
-                        value: selectedCity,
-                        elevation: 16,
-                        style: TextStyle(color: Colors.deepPurple, fontSize: 16),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedCity = newValue;
-                          });
-                        },
+                      SizedBox(height: 8.0),
+                      Container(
+                        width: double.infinity,
+                        child: DropdownButtonFormField<String>(
+                          hint: Text('Recommendation type'),
+                          value: selectedType,
+                          elevation: 16,
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedType = newValue;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select a recommendation type';
+                            }
+                            return null;
+                          },
+                          items: [
+                            'Hotel',
+                            'Restaurant',
+                            'Monument / Museum',
+                            'Other'
+                          ].map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      SizedBox(height: 8.0),
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration: InputDecoration(labelText: 'Description'),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please select a city';
+                            return 'Please enter a description';
                           }
                           return null;
                         },
-                        items: cities.map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
                       ),
-                    ),
-                    TextFormField(
-                      controller: addressController,
-                      decoration: InputDecoration(labelText: 'Address'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an address';
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
+                      SizedBox(height: 8.0),
+                      Container(
+                        width: double.infinity,
+                        child: DropdownButtonFormField<String>(
+                          hint: Text('Select city'),
+                          value: selectedCity,
+                          elevation: 16,
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedCity = newValue;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select a city';
+                            }
+                            return null;
+                          },
+                          items: cities
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: addressController,
+                        decoration: InputDecoration(labelText: 'Address'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an address';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.0),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate() &&
-                      selectedType != null &&
-                      selectedCity != null) {
-                    addRecommendation();
-                  }
-                },
-                child: Text('Add'),
-              ),
-            ],
-          ),
+                SizedBox(height: 8.0),
+                TextButton.icon(
+                  onPressed: () async {
+                    XFile? image = await ImagePicker()
+                        .pickImage(source: ImageSource.gallery);
+                    setState(() {
+                      pickedImage = image;
+                      showErrorMessage =
+                          pickedImage == null; // Update showErrorMessage
+                    });
+                  },
+                  icon: Icon(Icons.add_a_photo),
+                  label: Text('Add picture'),
+                ),
+                if (showErrorMessage)
+                  Text(
+                    'Please add a picture',
+                    style: TextStyle(color: Colors.red, fontSize: 13),
+                  ),
+                SizedBox(height: 16.0),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      showErrorMessage =
+                          _formKey.currentState?.validate() == false ||
+                              selectedType == null ||
+                              selectedCity == null ||
+                              pickedImage == null;
+                    });
+
+                    if (!showErrorMessage) {
+                      addRecommendation();
+                    }
+                  },
+                  child: Text('Add'),
+                ),
+              ],
+            ),
+          ]),
         ),
       ),
     );
@@ -298,6 +341,7 @@ class _NewRecommendation extends State<NewRecommendation> {
       'address': addressController.text,
       'type': selectedType,
       'username': username,
+      'picture': pickedImage!.path,
     });
 
     titleController.clear();
@@ -305,6 +349,7 @@ class _NewRecommendation extends State<NewRecommendation> {
     selectedType = null;
     selectedCity = null;
     addressController.clear();
+    pickedImage = null;
     Navigator.pop(context);
   }
 
@@ -314,8 +359,10 @@ class _NewRecommendation extends State<NewRecommendation> {
       if (user != null) {
         loggedUser = user;
 
-        final currentUserInfo =
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final currentUserInfo = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
         if (currentUserInfo.exists) {
           setState(() {
