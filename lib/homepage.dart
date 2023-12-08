@@ -1,10 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'favoritepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key});
@@ -14,6 +14,7 @@ class HomePage extends StatelessWidget {
 
     return List.generate(docs.length, (index) {
       if (docs[index]['type'] == type || type == '') {
+        // Replace the following line with the actual widget you want to generate
         return Padding(
           padding: EdgeInsets.all(paddingValue),
           child: Column(
@@ -76,20 +77,24 @@ class HomePage extends StatelessWidget {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              Container(
-                                alignment: Alignment.topLeft, // Align the text to the start
-                                child: Text(
-                                    "add by " + docs[index]['recoID'],
-                                    textAlign: TextAlign.start
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Container(
+                                      alignment: Alignment.topLeft, // Align the text to the start
+                                      child: Text(
+                                          "add by " + docs[index]['recoID'],
+                                          textAlign: TextAlign.start
+                                      )
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 20),
-                              Container(
-                                alignment: Alignment.topLeft, // Align the text to the start
-                                child: Text(
-                                    "Description",
-                                    style: TextStyle(fontWeight: FontWeight.bold)
-                                ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
+                                ],
                               ),
                               const SizedBox(height: 12),
                               Container(
@@ -97,6 +102,7 @@ class HomePage extends StatelessWidget {
                                 child: Text(
                                   docs[index]['recoDescription'],
                                   textAlign: TextAlign.justify,
+                                  // Remove the overflow and maxLines properties to show full text if it's long
                                 ),
                               ),
                             ],
@@ -142,115 +148,14 @@ class HomePage extends StatelessWidget {
         return Container();
       }
     });
-
-
   }
+
 
 
   @override
   Widget build(BuildContext context) {
     final double paddingValue = 30.0;
-
-    final List<Widget> listWidgetImages = List.generate(
-      5,
-          (index) => Padding(
-            padding: EdgeInsets.all(paddingValue),
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          content: SingleChildScrollView(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(0), // Set padding to zero
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Material(
-                                        shape: CircleBorder(),
-                                        clipBehavior: Clip.antiAlias,
-                                        child: IconButton(
-                                          icon: Icon(Icons.close, size: 20.0),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  constraints: BoxConstraints(
-                                    maxHeight: 400,
-                                  ),
-                                  width: double.maxFinite,
-                                  child: Image.asset(
-                                    'assets/background.jpg',
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text('Test of text'),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    const Text('Test of text'),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.star_border),
-                                        const Text('4'),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-
-
-                    );
-                  },
-                  child: Container(
-                    color: const Color(0xFF99C7C1),
-                    width: MediaQuery.of(context).size.width - 2 * paddingValue,
-                    height: MediaQuery.of(context).size.width - 2 * paddingValue,
-                    child: Container(
-                      margin: EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        'assets/background.jpg',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ),
-
-                SizedBox(
-                  height: 8,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Test of text'),
-                    Row(
-                      children: [
-                        Icon(Icons.star_border),
-                        const Text('4'),
-                      ],
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-    );
+    int length = 1;
 
 
     return MaterialApp(
