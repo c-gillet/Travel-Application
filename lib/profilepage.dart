@@ -71,26 +71,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  /*Future<void> _uploadProfilePicture() async {
-    try {
-      if (pickedImage != null) {
-        final storageRef =
-        FirebaseStorage.instance.ref().child('profile_pictures/${loggedUser!.uid}');
-        await storageRef.putFile(pickedImage!);
-        profilePictureUrl = await storageRef.getDownloadURL();
-
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(loggedUser!.uid)
-            .update({
-          'profilePictureUrl': profilePictureUrl,
-        });
-      }
-    } catch (e) {
-      print('Error uploading profile picture: $e');
-    }
-  }*/
-
   Widget _buildProfilePicture() {
     return Container(
       width: 100,
@@ -105,7 +85,7 @@ class _ProfilePageState extends State<ProfilePage> {
         )
             : null,
       ),
-      child: profilePictureUrl == null
+      child: profilePictureUrl == ""
           ? Icon(
         Icons.image,
         color: Colors.white,
@@ -160,15 +140,17 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: () async {
               try {
                 await FirebaseAuth.instance.signOut();
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => LoginPage()),
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                      (route) => false, // Clear the navigation stack
                 );
               } catch (e) {
                 print("Error during sign-out: $e");
               }
             },
-            icon: Icon(Icons.logout),
-          )
+            icon: const Icon(Icons.logout),
+          ),
+
         ],
       ),
       body: Padding(
@@ -302,30 +284,16 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: () async {
                       try {
                         await FirebaseAuth.instance.signOut();
-                        Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) => const LoginPage()));
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                              (route) => false, // Clear the navigation stack
+                        );
                       } catch (e) {
                         print("Error during sign-out: $e");
                       }
                     },
                   ),
                 ),
-              ),
-              TextButton(
-                onPressed: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => FractionallySizedBox(
-                      heightFactor: 2 / 3,
-                      child: Comments(
-                        recoID: 'hTgNNEOJ3xAtFcpjypRD',
-                      ),
-                    ),
-                  );
-                },
-                child: Text("Show Comments"),
               ),
             ],
           ),
@@ -344,7 +312,7 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
 const List<String> avatarUrls = [
-  'assets/profile_avatar/default_profile_image.png',
+  'assets/profile_avatar/default_profile_image.jpg',
   'assets/profile_avatar/koala.png',
   'assets/profile_avatar/giraffe.png',
   'assets/profile_avatar/lion.png',

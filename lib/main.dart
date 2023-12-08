@@ -39,10 +39,8 @@ class MyApp extends StatelessWidget {
             // ConnectionState.active means that the stream has emitted at least one item
             // and will continue to do so as the authentication state changes.
             if (snapshot.hasData) {
-              print('has data');
               return const HomePage();
             } else {
-              print('no data');
               return const LoginPage();
             }
           } else {

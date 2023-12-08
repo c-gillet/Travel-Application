@@ -269,7 +269,7 @@ class _CommentsState extends State<Comments> {
               return Container(
                 child: CommentBox(
                   userImage: AssetImage(profileUrl ??
-                      'assets/profile_avatar/default_profile_image.png'),
+                      'assets/profile_avatar/default_profile_image.jpg'),
                   labelText: 'Write a comment...',
                   errorText: 'Comment cannot be blank',
                   withBorder: false,
