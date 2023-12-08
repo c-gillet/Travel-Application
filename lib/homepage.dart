@@ -136,6 +136,7 @@ class _NewRecommendation extends State<NewRecommendation> {
   late XFile? pickedImage = null;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool showErrorMessage = false;
+  bool loading = false;
 
   @override
   void initState() {
@@ -147,6 +148,7 @@ class _NewRecommendation extends State<NewRecommendation> {
     selectedCity = null;
     addressController = TextEditingController();
     selectedRating = null;
+    loading = false;
   }
 
   @override
@@ -334,7 +336,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                   ),
                 SizedBox(height: 8,),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     setState(() {
                       showErrorMessage =
                           _formKey.currentState?.validate() == false ||
@@ -342,14 +344,23 @@ class _NewRecommendation extends State<NewRecommendation> {
                               selectedCity == null ||
                               selectedRating == null ||
                               pickedImage == null;
+                      loading = !showErrorMessage; // Mettez à jour loading seulement si showErrorMessage est faux
                     });
 
                     if (!showErrorMessage) {
-                      addRecommendation();
+                      await addRecommendation().then((_) {
+                        setState(() {
+                          loading = false;
+                        });
+                      });
                     }
                   },
-                  child: Text('Add'),
+                  child: loading
+                      ? CircularProgressIndicator()
+                      : Text('Add'),
                 ),
+
+
               ],
             ),
           ]),
@@ -358,11 +369,12 @@ class _NewRecommendation extends State<NewRecommendation> {
     );
   }
 
-  void addRecommendation() async {
+  Future<void> addRecommendation() async {
     try {
       if (pickedImage == null) {
         setState(() {
           showErrorMessage = true;
+          loading = false;
         });
         return;
       }
@@ -403,6 +415,9 @@ class _NewRecommendation extends State<NewRecommendation> {
       Navigator.pop(context);
     } catch (error) {
       print('Error adding recommendation: $error');
+      setState(() {
+        loading = false;
+      });
     }
   }
 
