@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:rating_dialog/rating_dialog.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'bottombar.dart';
@@ -7,6 +9,8 @@ import 'favoritepage.dart';
 import 'schedulepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
+import 'ratings.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key});
@@ -16,13 +20,93 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Widget> generateImageWidgets(BuildContext context, List<DocumentSnapshot> docs, String type) {
+  final GlobalKey<_HomePageState> streamBuilderKey =
+  GlobalKey<_HomePageState>();
+  final _authentification = FirebaseAuth.instance;
+  bool _isMounted = true;
+
+  User? loggedUser;
+  String? username;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  void initState() {
+    super.initState();
+    getCurrentUser();
+  }
+
+  void dispose() {
+    _isMounted = false;
+    super.dispose();
+  }
+
+  void getCurrentUser() async {
+    try {
+      final user = _authentification.currentUser;
+      if (user != null) {
+        loggedUser = user;
+
+        final currentUserInfo = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (currentUserInfo.exists) {
+          setState(() {
+            username = currentUserInfo.data()!['userName'];
+          });
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  List<Widget> generateImageWidgets(
+      BuildContext context, List<DocumentSnapshot> docs, String type) {
     final double paddingValue = 30.0;
 
+    Future<void> _addToWishList(BuildContext context, recoID) async {
+      try {
+        await FirebaseFirestore.instance.collection('wishList').add({
+          'username': username,
+          'recoID': recoID,
+          'wishlistID': "",
+        }).then((value) {
+          value.update({'wishlistID': value.id});
+          //print("Item added to wish list with ID: ${value.id}");
+        });
+      } catch (error) {
+        print("Failed to add item to wish list: $error");
+      }
+    }
+
+    Future<void> _removeFromWishList(BuildContext context, String recoID) async {
+      try {
+        // Fetch the document ID from the wishlist based on recoID and username
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('wishList')
+            .where('username', isEqualTo: username)
+            .where('recoID', isEqualTo: recoID)
+            .get();
+
+        // Iterate through the result and delete each document
+        for (QueryDocumentSnapshot document in querySnapshot.docs) {
+          await FirebaseFirestore.instance
+              .collection('wishList')
+              .doc(document.id)
+              .delete();
+          //print("Item removed from wish list with ID: ${document.id}");
+        }
+
+      } catch (error) {
+        print("Failed to remove item from wish list: $error");
+      }
+    }
 
     return List.generate(docs.length, (index) {
       if (docs[index]['type'] == type || type == '') {
-        // Replace the following line with the actual widget you want to generate
         return Padding(
           padding: EdgeInsets.all(paddingValue),
           child: Column(
@@ -33,143 +117,205 @@ class _HomePageState extends State<HomePage> {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        contentPadding: EdgeInsets.only(bottom: 16.0),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Material(
-                                      shape: const CircleBorder(),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: IconButton(
-                                        icon: const Icon(Icons.close, size: 20.0),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
+                        contentPadding: const EdgeInsets.only(bottom: 16.0),
+                        content: Stack(
+                          children: [
+
+                            SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    constraints: const BoxConstraints(maxHeight: 400,),
+                                    width: double.maxFinite,
+                                    child: Image.asset(
+                                      'assets/bg_image/login_bg.jpg',
+                                      fit: BoxFit.cover,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                constraints: const BoxConstraints(
-                                  maxHeight: 400,
-                                ),
-                                width: double.maxFinite,
-                                child: Image.asset(
-                                  'assets/bg_image/login_bg.jpg',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        Text(docs[index]['recoName'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
                                       children: [
                                         Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
                                           children: [
-                                            Icon(Icons.star_border),
-                                            Text(docs[index]['recoRating']),
+                                            Text(docs[index]['recoName'],
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)
+                                            ),
                                           ],
                                         ),
-                                        TextButton(
-                                          onPressed: () {
-                                            showModalBottomSheet(
-                                              context: context,
-                                              isScrollControlled: true,
-                                              backgroundColor: Colors.transparent,
-                                              builder: (context) => FractionallySizedBox(
-                                                heightFactor: 2 / 3,
-                                                child: Comments(
-                                                  recoID: docs[index]['recoID'],
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.star_border),
+                                                buildRatingInfoWidget(docs[index]['recoID']),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    showRatingDialog(context, docs[index]['recoID'], username);
+                                                  },
+                                                  child: Text(
+                                                    'Rate',
+                                                    style: TextStyle(
+                                                      color: Colors.blue,
+                                                      decoration: TextDecoration.underline,
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                          },
-                                          child: Text("Show Comments"),
+                                              ],
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                showModalBottomSheet(
+                                                  context: context,
+                                                  isScrollControlled: true,
+                                                  backgroundColor:
+                                                  Colors.transparent,
+                                                  builder: (context) =>
+                                                      FractionallySizedBox(
+                                                        heightFactor: 2 / 3,
+                                                        child: Comments(recoID: docs[index]['recoID'],),
+                                                      ),
+                                                );
+                                              },
+                                              child: const Text("Show Comments"),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                                alignment: Alignment.topLeft,
+                                                // Align the text to the start
+                                                child: Text("added by " + docs[index]['username'], textAlign: TextAlign.start)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+                                        const Row(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          children: [
+                                            Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
                                         Container(
-                                            alignment: Alignment.topLeft, // Align the text to the start
-                                            child: Text(
-                                                "added by " + docs[index]['recoID'],
-                                                textAlign: TextAlign.start
-                                            )
+                                          alignment: Alignment.topLeft,
+                                          // Align the text to the start
+                                          child: Text(docs[index]['recoDescription'], textAlign: TextAlign.justify,
+                                            // Remove the overflow and maxLines properties to show full text if it's long
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Container(
-                                      alignment: Alignment.topLeft, // Align the text to the start
-                                      child: Text(
-                                        docs[index]['recoDescription'],
-                                        textAlign: TextAlign.justify,
-                                        // Remove the overflow and maxLines properties to show full text if it's long
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            Container(
+                              child: Row(
+                                mainAxisAlignment:MainAxisAlignment.end,
+                                children: [
+                                  Material(
+                                    shape: const CircleBorder(),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.close, size: 20.0),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     },
                   );
                 },
-                child: Container(
-                  color: const Color(0xFF99C7C1),
-                  width: MediaQuery.of(context).size.width - 2 * paddingValue,
-                  height: MediaQuery.of(context).size.width - 2 * paddingValue,
-                  child: Container(
-                    margin: const EdgeInsets.all(8.0),
-                    child: Image.asset(
-                      'assets/bg_image/login_bg.jpg',
-                      fit: BoxFit.cover,
+                child: ListTile(
+                  title: Stack(
+                    children: [
+                      Container(
+                        color: const Color(0xFF99C7C1),
+                        width: MediaQuery.of(context).size.width - 2 * paddingValue,
+                        height: MediaQuery.of(context).size.width - 2 * paddingValue,
+                        child: Container(
+                          margin: const EdgeInsets.all(8.0),
+                          child: Image.asset(
+                            'assets/bg_image/login_bg.jpg',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('wishList')
+                                .where('username', isEqualTo: username)
+                                .where('recoID', isEqualTo: docs[index]['recoID'])
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.waiting) {
+                                return CircularProgressIndicator();
+                              }
+
+                              bool isLiked = snapshot.data?.docs.isNotEmpty ?? false;
+
+                              return GestureDetector(
+                                onTap: () async {
+
+                                  isLiked = !isLiked;
+
+                                  if (isLiked) {
+                                    await _addToWishList(context, docs[index]['recoID']);
+                                  } else {
+                                    await _removeFromWishList(context, docs[index]['recoID']);
+                                  }
+                                },
+                                child: AnimatedContainer(
+                                  duration: Duration(milliseconds: 300),
+                                  child: Icon(
+                                    isLiked ? Icons.favorite : Icons.favorite_border,
+                                    color: isLiked ? Colors.red : null,
+                                    size: 35,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(docs[index]['recoName']),
+                        Row(
+                          children: [
+                            const Icon(Icons.star_border),
+                            Text(docs[index]['recoRating'] ?? 'No rating'),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
+
                 ),
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(docs[index]['recoName']),
-                  Row(
-                    children: [
-                      Icon(Icons.star_border),
-                      Text(docs[index]['recoRating']),
-                    ],
-                  )
-                ],
               ),
             ],
           ),
@@ -178,7 +324,7 @@ class _HomePageState extends State<HomePage> {
         // You can return null or an empty container for non-"visit" items
         return Container();
       }
-    });
+    });// Add this line to return an empty list in case the function completes normally
   }
 
   @override
@@ -186,8 +332,6 @@ class _HomePageState extends State<HomePage> {
     final double paddingValue = 30.0;
     int length = 1;
     int _currentIndex = 0;
-
-
 
     return MaterialApp(
       theme: ThemeData(
@@ -234,16 +378,22 @@ class _HomePageState extends State<HomePage> {
                             color: const Color(0xFFFCC7BF),
                             child: const TabBar(
                               tabs: [
-                                Tab(icon: Icon(Icons.home, color: Colors.white)),
-                                Tab(icon: Icon(Icons.hotel, color: Colors.white)),
-                                Tab(icon: Icon(Icons.fastfood, color: Colors.white)),
-                                Tab(icon: Icon(Icons.museum, color: Colors.white)),
-                                Tab(icon: Icon(Icons.card_giftcard, color: Colors.white)),
+                                Tab(
+                                    icon: Icon(Icons.home, color: Colors.white)),
+                                Tab(
+                                    icon: Icon(Icons.hotel, color: Colors.white)),
+                                Tab(
+                                    icon: Icon(Icons.fastfood, color: Colors.white)),
+                                Tab(
+                                    icon: Icon(Icons.museum, color: Colors.white)),
+                                Tab(
+                                    icon: Icon(Icons.card_giftcard, color: Colors.white)),
                               ],
                             ),
                           ),
                         ),
-                        title: const Text('Home Page', style: TextStyle(color: Colors.white)),
+                        title: const Text('Home Page',
+                            style: TextStyle(color: Colors.white)),
                         actions: [
                           IconButton(
                             icon: const Icon(Icons.search),
@@ -260,11 +410,13 @@ class _HomePageState extends State<HomePage> {
                           // HOME
                           SingleChildScrollView(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState == ConnectionState.waiting) {
                                   // If the connection is still waiting, return a loading indicator or empty container.
-                                  return CircularProgressIndicator(); // or Container();
+                                  return const CircularProgressIndicator(); // or Container();
                                 } else if (snapshot.hasError) {
                                   // If there is an error in fetching the data, you can handle it here.
                                   return Text('Error: ${snapshot.error}');
@@ -285,11 +437,13 @@ class _HomePageState extends State<HomePage> {
                           // HOTEL
                           SingleChildScrollView(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState == ConnectionState.waiting) {
                                   // If the connection is still waiting, return a loading indicator or empty container.
-                                  return CircularProgressIndicator(); // or Container();
+                                  return const CircularProgressIndicator(); // or Container();
                                 } else if (snapshot.hasError) {
                                   // If there is an error in fetching the data, you can handle it here.
                                   return Text('Error: ${snapshot.error}');
@@ -310,11 +464,13 @@ class _HomePageState extends State<HomePage> {
                           // FOOD
                           SingleChildScrollView(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState == ConnectionState.waiting) {
                                   // If the connection is still waiting, return a loading indicator or empty container.
-                                  return CircularProgressIndicator(); // or Container();
+                                  return const CircularProgressIndicator(); // or Container();
                                 } else if (snapshot.hasError) {
                                   // If there is an error in fetching the data, you can handle it here.
                                   return Text('Error: ${snapshot.error}');
@@ -335,11 +491,13 @@ class _HomePageState extends State<HomePage> {
                           // MUSEUM
                           SingleChildScrollView(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState == ConnectionState.waiting) {
                                   // If the connection is still waiting, return a loading indicator or empty container.
-                                  return CircularProgressIndicator(); // or Container();
+                                  return const CircularProgressIndicator(); // or Container();
                                 } else if (snapshot.hasError) {
                                   // If there is an error in fetching the data, you can handle it here.
                                   return Text('Error: ${snapshot.error}');
@@ -360,11 +518,14 @@ class _HomePageState extends State<HomePage> {
                           // GIFT
                           SingleChildScrollView(
                             child: StreamBuilder<QuerySnapshot>(
-                              stream: FirebaseFirestore.instance.collection('recommendations').snapshots(),
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
                                   // If the connection is still waiting, return a loading indicator or empty container.
-                                  return CircularProgressIndicator(); // or Container();
+                                  return const CircularProgressIndicator(); // or Container();
                                 } else if (snapshot.hasError) {
                                   // If there is an error in fetching the data, you can handle it here.
                                   return Text('Error: ${snapshot.error}');
@@ -399,7 +560,7 @@ class _HomePageState extends State<HomePage> {
                 },
               );
             },
-            child: Icon(Icons.add),
+            child: const Icon(Icons.add),
           ),
           bottomNavigationBar: CommonBottomBar(
             currentIndex: _currentIndex,
@@ -463,18 +624,18 @@ class _NewRecommendation extends State<NewRecommendation> {
       child: Container(
         height: MediaQuery.of(context).size.height * 0.8,
         width: MediaQuery.of(context).size.width * 0.8,
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Add new recommendation',
               style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Form(
               key: _formKey,
               child: Column(
@@ -482,7 +643,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                 children: [
                   TextFormField(
                     controller: titleController,
-                    decoration: InputDecoration(labelText: 'Title'),
+                    decoration: const InputDecoration(labelText: 'Title'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a title';
@@ -490,14 +651,15 @@ class _NewRecommendation extends State<NewRecommendation> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Container(
                     width: double.infinity,
                     child: DropdownButtonFormField<String>(
-                      hint: Text('Recommendation type'),
+                      hint: const Text('Recommendation type'),
                       value: selectedType,
                       elevation: 16,
-                      style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+                      style: const TextStyle(
+                          color: Colors.deepPurple, fontSize: 16),
                       onChanged: (String? newValue) {
                         setState(() {
                           selectedType = newValue;
@@ -509,8 +671,12 @@ class _NewRecommendation extends State<NewRecommendation> {
                         }
                         return null;
                       },
-                      items: ['Hotel', 'Restaurant', 'Monument / Museum', 'Other']
-                          .map<DropdownMenuItem<String>>((String value) {
+                      items: [
+                        'Hotel',
+                        'Restaurant',
+                        'Monument / Museum',
+                        'Other'
+                      ].map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -518,10 +684,10 @@ class _NewRecommendation extends State<NewRecommendation> {
                       }).toList(),
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   TextFormField(
                     controller: descriptionController,
-                    decoration: InputDecoration(labelText: 'Description'),
+                    decoration: const InputDecoration(labelText: 'Description'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a description';
@@ -529,14 +695,15 @@ class _NewRecommendation extends State<NewRecommendation> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 8.0),
                   Container(
                     width: double.infinity,
                     child: DropdownButtonFormField<String>(
-                      hint: Text('Select city'),
+                      hint: const Text('Select city'),
                       value: selectedCity,
                       elevation: 16,
-                      style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+                      style: const TextStyle(
+                          color: Colors.deepPurple, fontSize: 16),
                       onChanged: (String? newValue) {
                         setState(() {
                           selectedCity = newValue;
@@ -548,7 +715,8 @@ class _NewRecommendation extends State<NewRecommendation> {
                         }
                         return null;
                       },
-                      items: cities.map<DropdownMenuItem<String>>((String value) {
+                      items:
+                          cities.map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -558,7 +726,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                   ),
                   TextFormField(
                     controller: addressController,
-                    decoration: InputDecoration(labelText: 'Address'),
+                    decoration: const InputDecoration(labelText: 'Address'),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter an address';
@@ -569,7 +737,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                 ],
               ),
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate() &&
@@ -578,7 +746,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                   addRecommendation();
                 }
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         ),

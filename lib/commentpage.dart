@@ -47,6 +47,9 @@ class _CommentsState extends State<Comments> {
           setState(() {
             username = currentUserInfo.data()!['userName'];
             profileUrl = currentUserInfo.data()!['profilePictureUrl'];
+            if(profileUrl==""){
+              profileUrl = "assets/profile_avatar/default_profile_image.jpg";
+            }
             //print(profileUrl);
           });
         }
@@ -123,8 +126,7 @@ class _CommentsState extends State<Comments> {
                     child: FutureBuilder(
                       future: fetchUserData(data[i]['username']),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
                           return CircularProgressIndicator();
                         } else if (snapshot.hasError) {
                           return Text('Error loading profile picture');
@@ -132,7 +134,7 @@ class _CommentsState extends State<Comments> {
                           Map<String, dynamic> userData =
                           snapshot.data as Map<String, dynamic>;
                           String profilePicture =
-                              userData['profilePictureUrl'] ?? '';
+                              userData['profilePictureUrl'] ?? 'assets/profile_avatar/default_profile_image.jpg';
 
                           return CircleAvatar(
                             radius: 50,

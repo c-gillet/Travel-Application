@@ -72,21 +72,17 @@ class _ProfilePageState extends State<ProfilePage> {
       height: 100,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColor.LightPink,
+        color: Colors.white,
         image: profilePictureUrl != null
             ? DecorationImage(
           image: NetworkImage(profilePictureUrl!),
           fit: BoxFit.cover,
         )
-            : null,
+            : DecorationImage(
+          image: NetworkImage('assets/profile_avatar/default_profile_image.jpg'),
+          fit: BoxFit.cover,
+        ) ,
       ),
-      child: profilePictureUrl == ""
-          ? Icon(
-        Icons.image,
-        color: Colors.white,
-        size: 40,
-      )
-          : null,
     );
   }
 
