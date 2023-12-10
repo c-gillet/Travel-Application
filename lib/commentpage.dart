@@ -114,7 +114,7 @@ class _CommentsState extends State<Comments> {
                 leading: GestureDetector(
                   onTap: () async {
                     // Display the image in large form.
-                    print("Comment Clicked");
+                    //print("Comment Clicked");
                   },
                   child: Container(
                     height: 50.0,
@@ -277,8 +277,6 @@ class _CommentsState extends State<Comments> {
                   withBorder: false,
                   sendButtonMethod: () async {
                     if (formKey.currentState!.validate()) {
-                      print(commentController.text);
-
                       // Get the current date and time
                       DateTime now = DateTime.now();
 
