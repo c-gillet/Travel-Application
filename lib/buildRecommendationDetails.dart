@@ -63,9 +63,41 @@ GestureDetector buildListTile(BuildContext context, dynamic document, String? us
             height: MediaQuery.of(context).size.width - 2 * paddingValue,
             child: Container(
               margin: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                'assets/bg_image/login_bg.jpg',
-                fit: BoxFit.cover,
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 400),
+                width: double.maxFinite,
+                child: document['picture'] is String
+                    ? Image.network(
+                  document['picture'],
+                  fit: BoxFit.cover,
+                  loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    } else {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                              : null,
+                        ),
+                      );
+
+                    }
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    // Handle the error if the image fails to load
+                    print('Error loading image: $error');
+                    // Return the fallback image
+                    return Image.asset(
+                      'assets/bg_image/login_bg.jpg', // Fallback image
+                      fit: BoxFit.cover,
+                    );
+                  },
+                )
+                    : Image.asset(
+                  'assets/bg_image/login_bg.jpg', // Fallback image
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -236,69 +268,86 @@ void showDetailsDialog(BuildContext context, String recoID) {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star_border),
+                                      buildRatingInfoWidget(recoID),
+                                      TextButton(
+                                        onPressed: () {
+                                          showRatingDialog(context, recoID, username);
+                                        },
+                                        child: const Text('Rate', style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline,),),
+                                      ),
+                                    ],
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (context) => FractionallySizedBox(
+                                          heightFactor: 2 / 3,
+                                          child: Comments(recoID: recoID),
+                                        ),
+                                      );
+                                    },
+                                    child: const Text("Show Comments"),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.star_border),
-                                    buildRatingInfoWidget(recoID),
-                                    TextButton(
-                                      onPressed: () {
-                                        showRatingDialog(context, recoID, username);
-                                      },
-                                      child: const Text('Rate', style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline,),),
+                                    Expanded(
+                                      child: Container(
+                                        alignment: Alignment.topLeft,
+                                        child: Text("added by $username", textAlign: TextAlign.start),
+                                      ),
                                     ),
                                   ],
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      builder: (context) => FractionallySizedBox(
-                                        heightFactor: 2 / 3,
-                                        child: Comments(recoID: recoID),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text("Show Comments"),
+                                const SizedBox(height: 12),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.location_city_rounded),
+                                    Expanded(
+                                      child: Text(" City: $recoCity"),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Container(
-                                  alignment: Alignment.topLeft,
-                                  child: Text("added by $username", textAlign: TextAlign.start),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.place),
+                                    Expanded(
+                                      child: Text(" $recoLocation"),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(Icons.location_city_rounded),
-                                Text(" City: $recoCity"),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(Icons.place),
-                                Text(" Location: $recoLocation"),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Icon(iconRecoType),
-                                Text(" $recoType"),
+                                const SizedBox(height: 5),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    Icon(iconRecoType),
+                                    Expanded(
+                                      child: Text(" $recoType"),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                             const SizedBox(height: 20),
