@@ -102,7 +102,7 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 onChanged: (value) {
                   email = value;
-                  print(email);
+                  //print(email);
                 },
                 validator: validateEmail,
               ),

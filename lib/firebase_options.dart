@@ -17,10 +17,6 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
       return web;
     }
     switch (defaultTargetPlatform) {
@@ -52,7 +48,6 @@ class DefaultFirebaseOptions {
         );
     }
   }
-
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyAsk2PerJvxXlDNZcpnB5x5WWKHVDAJ8PU',

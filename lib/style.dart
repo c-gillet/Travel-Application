@@ -5,4 +5,5 @@ class AppColor extends Color {
 
   static const LightPink = Color(0xFFd1a0a0);
   static const LightBlue = Color(0xFF70a5a9);
+  static const SalmonPink = Color(0xFFFCC7BF);
 }
