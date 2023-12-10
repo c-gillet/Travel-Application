@@ -1,63 +1,387 @@
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'favoritepage.dart';
-import 'schedulepage.dart';
-import 'profilepage.dart';
+
 import 'style.dart';
+import 'bottombar.dart';
+import 'buildRecommendationDetails.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+
+
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final GlobalKey<_HomePageState> streamBuilderKey =
+  GlobalKey<_HomePageState>();
+  String selectedCity = 'All';
+  final _authentification = FirebaseAuth.instance;
+  bool _isMounted = true;
+
+  User? loggedUser;
+  String? username;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  void initState() {
+    super.initState();
+    getCurrentUser();
+  }
+
+  void dispose() {
+    _isMounted = false;
+    super.dispose();
+  }
+
+  void getCurrentUser() async {
+    try {
+      final user = _authentification.currentUser;
+      if (user != null) {
+        loggedUser = user;
+
+        final currentUserInfo = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (currentUserInfo.exists) {
+          setState(() {
+            username = currentUserInfo.data()!['userName'];
+          });
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _selectCity(String city) {
+    setState(() {
+      selectedCity = city;
+    });
+  }
+
+
+  List<Widget> generateImageWidgets(
+      BuildContext context, List<DocumentSnapshot> docs, String type) {
+    final double paddingValue = 30.0;
+
+    List<Widget> widgets = [];
+
+    bool hasRecommendations = false;
+
+    for (int index = 0; index < docs.length; index++) {
+      final String city = docs[index]['city']; // Assuming 'city' is a field in your documents
+
+      if ((docs[index]['type'] == type || type == '') &&
+          (selectedCity == 'All' || city == selectedCity)) {
+        hasRecommendations = true;
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.all(paddingValue),
+            child: Column(
+              children: [
+                buildListTile(context, docs[index], username, paddingValue),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    if (!hasRecommendations) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text('There are no recommendations.'),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
+    final double paddingValue = 30.0;
+    int length = 1;
+    int _currentIndex = 0;
+
     return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: const MaterialColor(0xFFFCC7BF, {
+          50: Color(0xFFFCC7BF),
+          100: Color(0xFFFCC7BF),
+          200: Color(0xFFFCC7BF),
+          300: Color(0xFFFCC7BF),
+          400: Color(0xFFFCC7BF),
+          500: Color(0xFFFCC7BF),
+          600: Color(0xFFFCC7BF),
+          700: Color(0xFFFCC7BF),
+          800: Color(0xFFFCC7BF),
+          900: Color(0xFFFCC7BF),
+        }),
+      ),
       home: DefaultTabController(
         length: 5,
         child: Scaffold(
-          appBar: AppBar(
-            bottom: const TabBar(
-              tabs: [
-                Tab(icon: Icon(Icons.home)),
-                Tab(icon: Icon(Icons.hotel)),
-                Tab(icon: Icon(Icons.fastfood)),
-                Tab(icon: Icon(Icons.museum)),
-                Tab(icon: Icon(Icons.card_giftcard)),
-              ],
-            ),
-            title: const Text('Home Page'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  // SEARCH AREA
-                },
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  Colors.white.withOpacity(0.7),
+                  BlendMode.srcATop,
+                ),
+                child: Image.asset(
+                  'assets/bg_image/login_bg.jpg',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Container(
+                child: Column(
+                  children: [
+                    Container(
+                      height: 90, // Fixed height for the AppBar
+                      child: Stack(
+                        children: [
+                          AppBar(
+                            backgroundColor: Colors.transparent,
+                            elevation: 0,
+                            bottom: PreferredSize(
+                              preferredSize: const Size.fromHeight(48.0),
+                              child: Container(
+                                color: const Color(0xFFFCC7BF),
+                                child: const TabBar(
+                                  tabs: [
+                                    Tab(icon: Icon(Icons.home, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.hotel, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.fastfood, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.museum, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.card_giftcard, color: Colors.white)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            //title: const Text('Home Page', style: TextStyle(color: Colors.white)),
+
+                          ),
+                          Positioned(
+                            top: 0,
+                            left: MediaQuery.of(context).size.width / 2 - 150,
+                            child: Container(
+                              width: 300,
+                              decoration: BoxDecoration(
+                                color: AppColor.LightPink,
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 30),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    PopupMenuButton<String>(
+                                      icon: Container(
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.search, color: Colors.white),
+                                            ],
+                                          )),
+                                      onSelected: _selectCity,
+                                      itemBuilder: (BuildContext context) {
+                                        return [
+                                          'All',
+                                          'Seoul',
+                                          'Busan',
+                                          'Incheon',
+                                          'Daegu',
+                                          'Daejeon',
+                                          'Gwangju',
+                                          'Gyeongju',
+                                          'Sokcho',
+                                          'Suwon',
+                                          'Ulsan',
+                                          'Bucheon',
+                                          'Jeonju',
+                                          'Jejudo',
+                                        ].map<PopupMenuEntry<String>>((String city) {
+                                          return PopupMenuItem<String>(
+                                            value: city,
+                                            child: Text(city),
+                                          );
+                                        }).toList();
+                                      },
+                                    ), // Add some space between the dropdown and the selected city
+                                    Text(
+                                      selectedCity,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          // HOME
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return const CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, ''),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+
+                          // HOTEL
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return const CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Hotel'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+
+                          // FOOD
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return const CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Restaurant'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+
+                          // MUSEUM
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return const CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Monument / Museum'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+
+                          // GIFT
+                          SingleChildScrollView(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('recommendations')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  // If the connection is still waiting, return a loading indicator or empty container.
+                                  return const CircularProgressIndicator(); // or Container();
+                                } else if (snapshot.hasError) {
+                                  // If there is an error in fetching the data, you can handle it here.
+                                  return Text('Error: ${snapshot.error}');
+                                } else {
+                                  // If the data is available, get the list of documents and display the length.
+                                  List<DocumentSnapshot> docs = snapshot.data!.docs;
+                                  int recommendationsLength = docs.length;
+
+                                  return Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: generateImageWidgets(context, docs, 'Other'),
+                                  );
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          body: const TabBarView(
-            children: [
-              // HOME
-              Text('Home with random recommendations'),
-
-              // HOTEL
-              Text('Hotel recommendations'),
-
-              // FOOD
-              Text('Food recommendations'),
-
-              // MUSEUM
-              Text('Museum recommendations'),
-
-              // GIFT
-              Text('Gift?? recommendations'),
-            ],
-          ),
-
           floatingActionButton: FloatingActionButton(
             onPressed: () {
               // BUTTON FOR ADDING A NEW ELEMENT ON THE HOME PAGE
@@ -68,48 +392,15 @@ class HomePage extends StatelessWidget {
                 },
               );
             },
-            child: Icon(Icons.add),
+            child: const Icon(Icons.add),
           ),
-
-          // BOTTOM NAVIGATION BAR
-          bottomNavigationBar: BottomAppBar(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => HomePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.favorite),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => FavoritePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.access_time),
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SchedulePage()));
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_circle),
-                  onPressed: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => ProfilePage()));
-                  },
-                ),
-              ],
-            ),
+          bottomNavigationBar: CommonBottomBar(
+            currentIndex: _currentIndex,
+            onTabTapped: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
           ),
         ),
       ),
