@@ -4,6 +4,8 @@ import 'package:travel_application/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'LoginPage.dart';
+import 'addedplacespage.dart';
+import 'favoritepage.dart';
 import 'bottombar.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -201,7 +203,27 @@ class _ProfilePageState extends State<ProfilePage> {
                     title: const Text('Wish List'),
                     leading: const Icon(Icons.favorite),
                     trailing: const Icon(Icons.navigate_next),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => FavoritePage(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeInOut;
+
+                            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+                            var opacity = animation.drive(tween);
+                            return FadeTransition(
+                              opacity: opacity,
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -213,14 +235,19 @@ class _ProfilePageState extends State<ProfilePage> {
                     side: const BorderSide(color: AppColor.LightPink, width: 1),
                   ),
                   child: ListTile(
-                    title: const Text('Places Added'),
+                    title: const Text('Places Added By Me'),
                     leading: const Icon(Icons.add),
                     trailing: const Icon(Icons.navigate_next),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AddedPlacesPage()),
+                      );
+                    },
                   ),
                 ),
               ),
-              Container(
+              /*Container(
                 height: 60, // Adjust the height as needed
                 child: Card(
                   shape: RoundedRectangleBorder(
@@ -254,7 +281,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     },
                   ),
                 ),
-              ),
+              ),*/
               const SizedBox(height: 5,),
               Container(
                 height: 60,

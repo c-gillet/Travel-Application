@@ -28,15 +28,15 @@ void showRatingDialog(BuildContext context, recoID, username) {
               barrierDismissible: false, // Prevents dismissing the dialog by tapping outside
               builder: (context) {
                 return AlertDialog(
-                  title: Text('Thank You!'),
-                  content: Text('Thank you for your feedback.'),
+                  title: const Text('Thank You!'),
+                  content: const Text('Thank you for your feedback.'),
                   actions: <Widget>[
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop(); // Close the thank you dialog
                         Navigator.of(context).pop(); // Close the rating dialog
                       },
-                      child: Text('Close'),
+                      child: const Text('Close'),
                     ),
                   ],
                 );
@@ -112,9 +112,9 @@ Widget buildRatingInfoWidget(String recoID) {
     future: getRatingInfo(recoID),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return Text('Loading rating info...'); // Loading state
+        return const Text('Loading rating info...'); // Loading state
       } else if (snapshot.hasError) {
-        return Text('Error loading rating info'); // Error state
+        return const Text('Error loading rating info'); // Error state
       } else {
         double calculatedRating = snapshot.data?['calculatedRating'] ?? 0.0;
         int numberOfRatings = snapshot.data?['numberOfRatings'] ?? 0;
@@ -122,7 +122,7 @@ Widget buildRatingInfoWidget(String recoID) {
         return Row(
           children: [
             Text('$calculatedRating'),
-            Text(' ($numberOfRatings reviews)', style: TextStyle(fontStyle: FontStyle.italic)),
+            Text(' ($numberOfRatings reviews)', style: const TextStyle(fontStyle: FontStyle.italic)),
           ],
         );
       }
