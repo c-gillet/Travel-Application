@@ -381,7 +381,7 @@ class _NewRecommendation extends State<NewRecommendation> {
 
       final storageRef = firebase_storage.FirebaseStorage.instance
           .ref()
-          .child('recommendation_images/${DateTime.now().millisecondsSinceEpoch}');
+          .child('recommendation_images/${DateTime.now().millisecondsSinceEpoch}.${pickedImage!.path.split('.').last}');
 
       await storageRef.putFile(File(pickedImage!.path));
 
