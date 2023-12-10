@@ -318,7 +318,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                     setState(() {
                       pickedImage = image;
                       showErrorMessage =
-                          pickedImage == null; // Update showErrorMessage
+                          pickedImage == null;
                     });
                   },
                   icon: Icon(Icons.add_a_photo),
@@ -344,7 +344,7 @@ class _NewRecommendation extends State<NewRecommendation> {
                               selectedCity == null ||
                               selectedRating == null ||
                               pickedImage == null;
-                      loading = !showErrorMessage; // Mettez à jour loading seulement si showErrorMessage est faux
+                      loading = !showErrorMessage;
                     });
 
                     if (!showErrorMessage) {
@@ -378,10 +378,10 @@ class _NewRecommendation extends State<NewRecommendation> {
         });
         return;
       }
-
+      
       final storageRef = firebase_storage.FirebaseStorage.instance
           .ref()
-          .child('recommendation_images/${DateTime.now().millisecondsSinceEpoch}');
+          .child('recommendation_images/${DateTime.now().millisecondsSinceEpoch}.${pickedImage!.path.split('.').last}');
 
       await storageRef.putFile(File(pickedImage!.path));
 
