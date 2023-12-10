@@ -153,6 +153,7 @@ class _HomePageState extends State<HomePage> {
               Container(
                 child: Column(
                   children: [
+                    SizedBox(height: 25,),
                     Container(
                       height: 90, // Fixed height for the AppBar
                       child: Stack(
@@ -183,6 +184,7 @@ class _HomePageState extends State<HomePage> {
                             left: MediaQuery.of(context).size.width / 2 - 150,
                             child: Container(
                               width: 300,
+                              height: 40,
                               decoration: BoxDecoration(
                                 color: AppColor.LightPink,
                                 borderRadius: BorderRadius.circular(30.0),
@@ -526,15 +528,18 @@ class _NewRecommendation extends State<NewRecommendation> {
                           }).toList(),
                         ),
                       ),
-                      TextFormField(
-                        controller: descriptionController,
-                        decoration: InputDecoration(labelText: 'Description'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
+                      Container(
+                        height: 50,
+                        child: TextFormField(
+                          controller: descriptionController,
+                          decoration: InputDecoration(labelText: 'Description'),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a description';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                       Container(
                         width: double.infinity,

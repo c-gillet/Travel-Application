@@ -77,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
         color: Colors.white,
         image: profilePictureUrl != null
             ? DecorationImage(
-          image: NetworkImage(profilePictureUrl!),
+          image: AssetImage(profilePictureUrl!),
           fit: BoxFit.cover,
         )
             : DecorationImage(
@@ -110,7 +110,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Navigator.pop(context); // Close the modal
                   },
                   child: CircleAvatar(
-                    backgroundImage: NetworkImage(avatarUrls[index]),
+                    backgroundImage: AssetImage(avatarUrls[index]),
                   ),
                 );
               },
