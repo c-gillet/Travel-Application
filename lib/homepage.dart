@@ -23,6 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<_HomePageState> streamBuilderKey =
   GlobalKey<_HomePageState>();
+  String selectedCity = 'All';
   final _authentification = FirebaseAuth.instance;
   bool _isMounted = true;
 
@@ -64,29 +65,53 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _selectCity(String city) {
+    setState(() {
+      selectedCity = city;
+    });
+  }
+
+
   List<Widget> generateImageWidgets(
       BuildContext context, List<DocumentSnapshot> docs, String type) {
     final double paddingValue = 30.0;
 
+    List<Widget> widgets = [];
 
-    return List.generate(docs.length, (index) {
-      if (docs[index]['type'] == type || type == '') {
-        return Padding(
-          padding: EdgeInsets.all(paddingValue),
-          child: Column(
-            children: [
-              buildListTile(context, docs[index], username, paddingValue),
+    bool hasRecommendations = false;
 
+    for (int index = 0; index < docs.length; index++) {
+      final String city = docs[index]['city']; // Assuming 'city' is a field in your documents
 
-            ],
+      if ((docs[index]['type'] == type || type == '') &&
+          (selectedCity == 'All' || city == selectedCity)) {
+        hasRecommendations = true;
+        widgets.add(
+          Padding(
+            padding: EdgeInsets.all(paddingValue),
+            child: Column(
+              children: [
+                buildListTile(context, docs[index], username, paddingValue),
+              ],
+            ),
           ),
         );
-      } else {
-        // You can return null or an empty container for non-"visit" items
-        return Container();
       }
-    });// Add this line to return an empty list in case the function completes normally
+    }
+
+    if (!hasRecommendations) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text('There are no recommendations.'),
+        ),
+      );
+    }
+
+    return widgets;
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -130,37 +155,83 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Container(
                       height: 90, // Fixed height for the AppBar
-                      child: AppBar(
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        bottom: PreferredSize(
-                          preferredSize: const Size.fromHeight(48.0),
-                          child: Container(
-                            color: const Color(0xFFFCC7BF),
-                            child: const TabBar(
-                              tabs: [
-                                Tab(
-                                    icon: Icon(Icons.home, color: Colors.white)),
-                                Tab(
-                                    icon: Icon(Icons.hotel, color: Colors.white)),
-                                Tab(
-                                    icon: Icon(Icons.fastfood, color: Colors.white)),
-                                Tab(
-                                    icon: Icon(Icons.museum, color: Colors.white)),
-                                Tab(
-                                    icon: Icon(Icons.card_giftcard, color: Colors.white)),
-                              ],
+                      child: Stack(
+                        children: [
+                          AppBar(
+                            backgroundColor: Colors.transparent,
+                            elevation: 0,
+                            bottom: PreferredSize(
+                              preferredSize: const Size.fromHeight(48.0),
+                              child: Container(
+                                color: const Color(0xFFFCC7BF),
+                                child: const TabBar(
+                                  tabs: [
+                                    Tab(icon: Icon(Icons.home, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.hotel, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.fastfood, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.museum, color: Colors.white)),
+                                    Tab(icon: Icon(Icons.card_giftcard, color: Colors.white)),
+                                  ],
+                                ),
+                              ),
                             ),
+                            //title: const Text('Home Page', style: TextStyle(color: Colors.white)),
+
                           ),
-                        ),
-                        title: const Text('Home Page',
-                            style: TextStyle(color: Colors.white)),
-                        actions: [
-                          IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () {
-                              // SEARCH AREA
-                            },
+                          Positioned(
+                            top: 0,
+                            left: MediaQuery.of(context).size.width / 2 - 150,
+                            child: Container(
+                              width: 300,
+                              decoration: BoxDecoration(
+                                color: AppColor.LightPink,
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 30),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    PopupMenuButton<String>(
+                                      icon: Container(
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.search, color: Colors.white),
+                                            ],
+                                      )),
+                                      onSelected: _selectCity,
+                                      itemBuilder: (BuildContext context) {
+                                        return [
+                                          'All',
+                                          'Seoul',
+                                          'Busan',
+                                          'Incheon',
+                                          'Daegu',
+                                          'Daejeon',
+                                          'Gwangju',
+                                          'Gyeongju',
+                                          'Sokcho',
+                                          'Suwon',
+                                          'Ulsan',
+                                          'Bucheon',
+                                          'Jeonju',
+                                          'Jejudo',
+                                        ].map<PopupMenuEntry<String>>((String city) {
+                                          return PopupMenuItem<String>(
+                                            value: city,
+                                            child: Text(city),
+                                          );
+                                        }).toList();
+                                      },
+                                    ), // Add some space between the dropdown and the selected city
+                                    Text(
+                                      selectedCity,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),

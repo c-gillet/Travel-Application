@@ -193,12 +193,35 @@ void showDetailsDialog(BuildContext context, String recoID) {
                             ? Image.network(
                           recoPicture,
                           fit: BoxFit.cover,
+                          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                            if (loadingProgress == null) {
+                              return child;
+                            } else {
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded / (loadingProgress.expectedTotalBytes ?? 1)
+                                      : null,
+                                ),
+                              );
+                            }
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            // Handle the error if the image fails to load
+                            print('Error loading image: $error');
+                            // Return the fallback image
+                            return Image.asset(
+                              'assets/bg_image/login_bg.jpg', // Fallback image
+                              fit: BoxFit.cover,
+                            );
+                          },
                         )
                             : Image.asset(
                           'assets/bg_image/login_bg.jpg', // Fallback image
                           fit: BoxFit.cover,
                         ),
                       ),
+
                       const SizedBox(height: 16),
                       Padding(
                         padding: const EdgeInsets.all(16.0),
