@@ -30,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   User? loggedUser;
   String? username;
 
+
   @override
   bool get wantKeepAlive => true;
 
@@ -166,6 +167,7 @@ class _HomePageState extends State<HomePage> {
                               child: Container(
                                 color: const Color(0xFFFCC7BF),
                                 child: const TabBar(
+                                  indicatorColor: AppColor.LightBlue,
                                   tabs: [
                                     Tab(icon: Icon(Icons.home, color: Colors.white)),
                                     Tab(icon: Icon(Icons.hotel, color: Colors.white)),
