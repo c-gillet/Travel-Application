@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "758459920016",
+    "project_id": "traveldb-89cec",
+    "storage_bucket": "traveldb-89cec.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758459920016:android:f25c25c6588bccd6557215",
+        "android_client_info": {
+          "package_name": "com.example.TravelDB"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2tMaHMT-aNHb5vT-sQ7rw9E3twHws0q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758459920016:android:89d9d677475e2819557215",
+        "android_client_info": {
+          "package_name": "com.example.firebase"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2tMaHMT-aNHb5vT-sQ7rw9E3twHws0q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:758459920016:android:bcc46f8bda8a088f557215",
+        "android_client_info": {
+          "package_name": "com.example.travel_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2tMaHMT-aNHb5vT-sQ7rw9E3twHws0q0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
