@@ -107,7 +107,7 @@ class _AddedPlacesPageState extends State<AddedPlacesPage> {
                           children: [
                             ElevatedButton(
                               onPressed: () {
-                                showDetailsDialog(context, recoID);
+                                showDetailsDialog(context, recoID,username);
                               },
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.all(0),
@@ -142,7 +142,7 @@ class _AddedPlacesPageState extends State<AddedPlacesPage> {
                                         IconButton(
                                           icon: const Icon(Icons.info),
                                           onPressed: () {
-                                            showDetailsDialog(context, recoID);
+                                            showDetailsDialog(context, recoID,username);
                                           },
                                         ),
                                       ],

@@ -33,7 +33,7 @@ class ScheduleScaffold extends StatefulWidget {
 }
 
 class _ScheduleScaffoldState extends State<ScheduleScaffold> {
-  int _currentIndex = 0;
+  int _currentIndex = 2;
 
   @override
   Widget build(BuildContext context) {

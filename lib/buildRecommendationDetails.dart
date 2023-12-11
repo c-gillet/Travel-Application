@@ -45,14 +45,10 @@ Future<void> _removeFromWishList(BuildContext context,recoID, username) async {
 }
 
 
-void showDetailsDialogFromGesture(BuildContext context, String recoID) {
-  showDetailsDialog(context, recoID);
-}
-
-GestureDetector buildListTile(BuildContext context, dynamic document, String? username, double paddingValue) {
+GestureDetector buildListTile(BuildContext context, dynamic document, String? loginUsername, double paddingValue) {
   return GestureDetector(
     onTap: () {
-      showDetailsDialogFromGesture(context, document['recoID']);
+      showDetailsDialog(context, document['recoID'], loginUsername);
     },
     child: ListTile(
       title: Stack(
@@ -109,7 +105,7 @@ GestureDetector buildListTile(BuildContext context, dynamic document, String? us
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('wishList')
-                    .where('username', isEqualTo: username)
+                    .where('username', isEqualTo: loginUsername)
                     .where('recoID', isEqualTo: document['recoID'])
                     .snapshots(),
                 builder: (context, snapshot) {
@@ -124,9 +120,9 @@ GestureDetector buildListTile(BuildContext context, dynamic document, String? us
                       isLiked = !isLiked;
 
                       if (isLiked) {
-                        await _addToWishList(context, document['recoID'],username);
+                        await _addToWishList(context, document['recoID'],loginUsername);
                       } else {
-                        await _removeFromWishList(context, document['recoID'],username);
+                        await _removeFromWishList(context, document['recoID'],loginUsername);
                       }
                     },
                     child: TweenAnimationBuilder<double>(
@@ -174,7 +170,7 @@ GestureDetector buildListTile(BuildContext context, dynamic document, String? us
 }
 
 
-void showDetailsDialog(BuildContext context, String recoID) {
+void showDetailsDialog(BuildContext context, String recoID, loginUsername) {
   FirebaseFirestore.instance
       .collection('recommendations')
       .doc(recoID)
@@ -279,7 +275,7 @@ void showDetailsDialog(BuildContext context, String recoID) {
                                       buildRatingInfoWidget(recoID),
                                       TextButton(
                                         onPressed: () {
-                                          showRatingDialog(context, recoID, username);
+                                          showRatingDialog(context, recoID, loginUsername);
                                         },
                                         child: const Text('Rate', style: TextStyle(color: Colors.blue, decoration: TextDecoration.underline,),),
                                       ),
