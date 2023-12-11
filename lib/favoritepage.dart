@@ -122,126 +122,137 @@ class _FavoritePageState extends State<FavoritePage> {
         automaticallyImplyLeading: false,
         backgroundColor: AppColor.SalmonPink,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: wishlist.isEmpty
-            ? const Center(
-          child: Text('Your wishlist is empty'),
-        )
-            : ListView(
-          children: wishlist.map((DocumentSnapshot document) {
-            String recoID = document['recoID'];
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              Colors.white.withOpacity(0.7),
+              BlendMode.srcATop,
+            ),
+            child: Image.asset(
+              'assets/bg_image/login_bg.jpg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: wishlist.isEmpty
+                ? const Center(
+              child: Text('Your wishlist is empty'),
+            )
+                : ListView(
+              children: wishlist.map((DocumentSnapshot document) {
+                String recoID = document['recoID'];
 
-            return FutureBuilder(
-              key: ValueKey(recoID),
-              future: FirebaseFirestore.instance
-                  .collection('recommendations')
-                  .doc(recoID)
-                  .get(),
-              builder: (context,
-                  AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasError) {
-                    return const ListTile(
-                      title: Text('Error loading data'),
-                    );
-                  }
+                return FutureBuilder(
+                  key: ValueKey(recoID),
+                  future: FirebaseFirestore.instance
+                      .collection('recommendations')
+                      .doc(recoID)
+                      .get(),
+                  builder: (context,
+                      AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      if (snapshot.hasError) {
+                        return const ListTile(
+                          title: Text('Error loading data'),
+                        );
+                      }
 
-                  if (snapshot.hasData &&
-                      snapshot.data!.exists &&
-                      snapshot.data!.data()!.containsKey('recoName')) {
-                    String name = snapshot.data!.data()!['recoName'];
-                    String type = snapshot.data!.data()!['type'];
+                      if (snapshot.hasData &&
+                          snapshot.data!.exists &&
+                          snapshot.data!.data()!.containsKey('recoName')) {
+                        String name = snapshot.data!.data()!['recoName'];
+                        String type = snapshot.data!.data()!['type'];
 
-                    return Column(
-                      children: [
-                        Stack(
+                        return Column(
                           children: [
-                            Dismissible(
-                              key: UniqueKey(),
-                              onDismissed: (direction) {
-                                _removeFromWishList(context, recoID);
-                              },
-                              background: Container(
-                                color: Colors.red,
-                              ),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  showDetailsDialog(context, recoID);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.all(0),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(5.0),
+                            Stack(
+                              children: [
+                                Dismissible(
+                                  key: UniqueKey(),
+                                  onDismissed: (direction) {
+                                    _removeFromWishList(context, recoID);
+                                  },
+                                  background: Container(
+                                    color: Colors.red,
                                   ),
-                                ),
-                                child: Ink(
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Colors.white, AppColor.LightBlue],
-                                      begin: Alignment.centerLeft,
-                                      end: Alignment.centerRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(5.0),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: ListTile(
-                                      key: ValueKey(recoID),
-                                      title: Text(
-                                        name,
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                  child: TextButton(
+                                    onPressed: () {
+                                      showDetailsDialog(context, recoID);
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.all(0),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(5.0),
                                       ),
-                                      //trailing: Icon(Icons.arrow_forward_ios, color: AppColor.LightPink,size: 15,),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.info),
+                                    ),
+                                    child: Ink(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(5.0),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: ListTile(
+                                          key: ValueKey(recoID),
+                                          title: Text(
+                                            name,
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          //trailing: Icon(Icons.arrow_forward_ios, color: AppColor.LightPink,size: 15,),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.info),
+                                                onPressed: () {
+                                                  showDetailsDialog(context, recoID);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                          leading: IconButton(
+                                            icon: const Icon(Icons.close),
                                             onPressed: () {
-                                              showDetailsDialog(context, recoID);
+                                              _removeFromWishList(context, recoID);
                                             },
                                           ),
-                                        ],
-                                      ),
-                                      leading: IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: () {
-                                          _removeFromWishList(context, recoID);
-                                        },
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
+                            const SizedBox(height: 10),
                           ],
+                        );
+                      } else {
+                        return ListTile(
+                          key: ValueKey(recoID),
+                          title: const Text('Error Loading Information'),
+                        );
+                      }
+                    } else {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ListTile(
+                          key: ValueKey(recoID),
+                          title: const Text('Loading...'),
                         ),
-                        const SizedBox(height: 10),
-                      ],
-                    );
-                  } else {
-                    return ListTile(
-                      key: ValueKey(recoID),
-                      title: const Text('Error Loading Information'),
-                    );
-                  }
-                } else {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      key: ValueKey(recoID),
-                      title: const Text('Loading...'),
-                    ),
-                  );
-                }
-              },
-            );
-          }).toList(),
-        ),
+                      );
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: CommonBottomBar(
         currentIndex: _currentIndex,
@@ -251,6 +262,7 @@ class _FavoritePageState extends State<FavoritePage> {
           });
         },
       ),
+
     );
   }
 }
