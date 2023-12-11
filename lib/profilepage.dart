@@ -75,16 +75,17 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white,
-        image: profilePictureUrl != null
+        image: (profilePictureUrl != null && profilePictureUrl!.isNotEmpty)
             ? DecorationImage(
           image: AssetImage(profilePictureUrl!),
           fit: BoxFit.cover,
         )
             : DecorationImage(
-          image: NetworkImage('assets/profile_avatar/default_profile_image.jpg'),
+          image: AssetImage('assets/profile_avatar/default_profile_image.jpg'),
           fit: BoxFit.cover,
-        ) ,
-      ),
+        ),
+      )
+
     );
   }
 
