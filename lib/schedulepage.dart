@@ -4,13 +4,19 @@ import 'homepage.dart';
 import 'favoritepage.dart';
 import 'profilepage.dart';
 import 'style.dart';
+import 'bottombar.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 
-class SchedulePage extends StatelessWidget {
+class SchedulePage extends StatefulWidget {
   const SchedulePage({Key? key});
 
+  @override
+  State<SchedulePage> createState() => _SchedulePageState();
+}
+
+class _SchedulePageState extends State<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,16 +25,24 @@ class SchedulePage extends StatelessWidget {
   }
 }
 
-class ScheduleScaffold extends StatelessWidget {
+class ScheduleScaffold extends StatefulWidget {
   const ScheduleScaffold({Key? key}) : super(key: key);
+
+  @override
+  _ScheduleScaffoldState createState() => _ScheduleScaffoldState();
+}
+
+class _ScheduleScaffoldState extends State<ScheduleScaffold> {
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
-
     return Scaffold(
       appBar: AppBar(
         title: Text('My Schedule'),
+        automaticallyImplyLeading: false,
+        backgroundColor: AppColor.SalmonPink,
       ),
       body: ListView(
         children: [
@@ -46,34 +60,13 @@ class ScheduleScaffold extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.favorite),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => FavoritePage()));
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.access_time),
-              onPressed: () {},
-            ),
-            IconButton(
-              icon: const Icon(Icons.account_circle),
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
-              },
-            ),
-          ],
-        ),
+      bottomNavigationBar: CommonBottomBar(
+        currentIndex: _currentIndex,
+        onTabTapped: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }
@@ -101,7 +94,7 @@ class _ScheduleTableCalendarState extends State<ScheduleTableCalendar> {
           calendarFormat: CalendarFormat.month,
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-              color: Colors.lightBlueAccent,
+              color: AppColor.LightPink,
               shape: BoxShape.circle,
             ),
             selectedDecoration: BoxDecoration(
@@ -126,7 +119,6 @@ class _ScheduleTableCalendarState extends State<ScheduleTableCalendar> {
     );
   }
 }
-
 void _openAddDataDialog(BuildContext context, DateTime selectedDay) {
   List<String> dropdownItems = [];
   TimeOfDay selectedTime = TimeOfDay.now();
@@ -140,88 +132,104 @@ void _openAddDataDialog(BuildContext context, DateTime selectedDay) {
       dropdownItems.add(doc['recoName'] ?? ''); // Agregar el nombre de la recomendación a la lista
     });
 
+    String selectedDropdownValue = dropdownItems.isNotEmpty ? dropdownItems.first : '';
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return Dialog(
-          child: SingleChildScrollView(
-            child: Container(
-              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: dropdownItems.isNotEmpty ? dropdownItems.first : null,
-                    items: dropdownItems.map((String item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(item),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      // Tu lógica onChanged aquí
-                    },
-                    decoration: InputDecoration(
-                      labelText: 'Type',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  InkWell(
-                    onTap: () async {
-                      TimeOfDay? pickedTime = await showTimePicker(
-                        context: context,
-                        initialTime: selectedTime,
-                      );
-
-                      if (pickedTime != null) {
-                        selectedTime = pickedTime;
-                      }
-                    },
-                    child: InputDecorator(
+        return StatefulBuilder(builder: (context, setState) {
+          return Dialog(
+            child: SingleChildScrollView(
+              child: Container(
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.7),
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: selectedDropdownValue,
+                      items: dropdownItems.map((String item) {
+                        return DropdownMenuItem<String>(
+                          value: item,
+                          child: Text(item),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedDropdownValue = newValue ?? '';
+                        });
+                      },
                       decoration: InputDecoration(
-                        labelText: 'Start Time',
-                        hintText: 'Select Time',
+                        labelText: 'Type',
                         border: OutlineInputBorder(),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Text(
-                            selectedTime.format(context),
-                          ),
-                          Icon(Icons.access_time),
-                        ],
+                    ),
+                    SizedBox(height: 20),
+                    InkWell(
+                      onTap: () async {
+                        TimeOfDay? pickedTime = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                          builder: (BuildContext context, Widget? child) {
+                            return Theme(
+                              data: ThemeData.light().copyWith(
+                                primaryColor: AppColor.LightPink,
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+
+                        if (pickedTime != null) {
+                          setState(() {
+                            selectedTime = pickedTime;
+                          });
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Start Time',
+                          hintText: 'Select Time',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              selectedTime.format(context),
+                            ),
+                            Icon(Icons.access_time),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  TextFormField(
-                    controller: _notesController,
-                    decoration: InputDecoration(labelText: 'Notes'),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      String notes = _notesController.text;
-                      _saveDataToFirebase(selectedDay, dropdownItems.first, selectedTime, notes, context);
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Save'),
-                  ),
-                ],
+
+                    SizedBox(height: 20),
+                    TextFormField(
+                      controller: _notesController,
+                      decoration: InputDecoration(labelText: 'Notes'),
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        String notes = _notesController.text;
+                        _saveDataToFirebase(selectedDay, selectedDropdownValue, selectedTime, notes, context);
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Save'),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          );
+        });
       },
     );
   }).catchError((error) {
-    print('Error obteniendo recomendaciones: $error');
+    print('Error: $error');
   });
 }
-
 
 
 Future<void> _saveDataToFirebase(
@@ -239,7 +247,7 @@ Future<void> _saveDataToFirebase(
     events
         .add({
       'userId': currentUser.uid,
-      'date': selectedDay,
+      'date': Timestamp.fromDate(selectedDay),
       'type': eventType,
       'start_time': selectedTime.format(context),
       'notes': notes,
@@ -256,77 +264,81 @@ Future<void> _saveDataToFirebase(
       );
     });
   } else {
-    print('No user ');
+    print('No user');
   }
 }
 
 class UpcomingEventsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<QuerySnapshot>(
-      future: ScheduleFunctions.getUpcomingEvents(),
-      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return Center(child: Text('There are no upcoming events'));
-        } else {
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              DocumentSnapshot document = snapshot.data!.docs[index];
-              Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
-
-              if (data == null) {
-                return SizedBox();
-              }
-
-              DateTime eventDate = (data['date'] as Timestamp).toDate();
-              String title = data['type'] ?? 'Title not available';
-              String description = data['notes'] ?? 'Description not available';
-
-              return Dismissible(
-                key: UniqueKey(),
-                onDismissed: (direction) {
-                  ScheduleFunctions.deleteEvent(document.id).then((value) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('$title deleted'),
-                      ),
-                    );
-                  }).catchError((error) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error deleting $title: $error'),
-                      ),
-                    );
-                  });
-                },
-                background: Container(
-                  color: Colors.red,
-                  child: Icon(Icons.delete, color: Colors.white),
-                  alignment: Alignment.centerRight,
-                  padding: EdgeInsets.only(right: 20.0),
-                ),
-                direction: DismissDirection.endToStart,
-                child: ListTile(
-                  title: Text(title),
-                  subtitle: Text(description),
-                  trailing: Text(
-                    '${eventDate.day}/${eventDate.month}/${eventDate.year}',
-                  ),
-                ),
-              );
-            },
-          );
-        }
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ScheduleFunctions.getUpcomingEvents();
       },
+      child: FutureBuilder<QuerySnapshot>(
+        future: ScheduleFunctions.getUpcomingEvents(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('There are no upcoming events'));
+          } else {
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+                DocumentSnapshot document = snapshot.data!.docs[index];
+                Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
+
+                if (data == null) {
+                  return SizedBox();
+                }
+
+                DateTime eventDate = (data['date'] as Timestamp).toDate();
+                String title = data['type'] ?? 'Title not available';
+                String description = data['notes'] ?? 'Description not available';
+
+                return Dismissible(
+                  key: UniqueKey(),
+                  onDismissed: (direction) {
+                    ScheduleFunctions.deleteEvent(document.id).then((value) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('$title deleted'),
+                        ),
+                      );
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error deleting $title: $error'),
+                        ),
+                      );
+                    });
+                  },
+                  background: Container(
+                    color: Colors.red,
+                    child: Icon(Icons.delete, color: Colors.white),
+                    alignment: Alignment.centerRight,
+                    padding: EdgeInsets.only(right: 20.0),
+                  ),
+                  direction: DismissDirection.endToStart,
+                  child: ListTile(
+                    title: Text(title),
+                    subtitle: Text(description),
+                    trailing: Text(
+                      '${eventDate.day}/${eventDate.month}/${eventDate.year}',
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        },
+      ),
     );
   }
 }
-
 
 class ScheduleFunctions {
   static Future<QuerySnapshot> getUpcomingEvents() async {
@@ -338,10 +350,8 @@ class ScheduleFunctions {
     if (currentUserUid != null) {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('Calendar')
-          .where('userId',
-          isEqualTo: currentUserUid)
-          .where(
-          'date', isGreaterThanOrEqualTo: now, isLessThanOrEqualTo: futureDate)
+          .where('userId', isEqualTo: currentUserUid)
+          .where('date', isGreaterThanOrEqualTo: now, isLessThanOrEqualTo: futureDate)
           .orderBy('date')
           .get();
 
@@ -354,11 +364,8 @@ class ScheduleFunctions {
   static Future<void> deleteEvent(String eventId) async {
     try {
       await FirebaseFirestore.instance.collection('Calendar').doc(eventId).delete();
-      print('Successfully deleted event');
     } catch (e) {
-      print('Error deleting event: $e');
-      }
+      throw Exception(e.toString());
     }
   }
-
-
+}
