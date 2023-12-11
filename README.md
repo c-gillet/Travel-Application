@@ -19,6 +19,3 @@ Features
 6. Planning and Scheduling
   # Schedule Planner: Plan your itinerary by adding recommendations to your schedule with personalized comments.
 
-To get started clone the repository by prompting:
-
-## git clone https://github.com/your-username/travelapp.git ##
